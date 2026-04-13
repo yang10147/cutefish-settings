@@ -4,12 +4,17 @@
 static QVariantList getBackgroundPaths()
 {
     QVariantList list;
-    QDirIterator it("/usr/share/backgrounds/cutefishos", QStringList() << "*.jpg" << "*.png", QDir::Files, QDirIterator::Subdirectories);
+    QDirIterator it("/usr/share/backgrounds/cutefishos",
+                    QStringList() << "*.jpg" << "*.png",
+                    QDir::Files,
+                    QDirIterator::Subdirectories);
     while (it.hasNext()) {
-        QString bg = it.next();
-        list.append(QVariant(bg));
+        list.append(QVariant(it.next()));
     }
-    std::sort(list.begin(), list.end());
+    // Qt6: QVariant 没有 operator<，改用 lambda 比较 toString()
+    std::sort(list.begin(), list.end(), [](const QVariant &a, const QVariant &b) {
+        return a.toString() < b.toString();
+    });
     return list;
 }
 
@@ -22,7 +27,6 @@ Background::Background(QObject *parent)
 {
     if (m_interface.isValid()) {
         m_currentPath = m_interface.property("wallpaper").toString();
-
         QDBusConnection::sessionBus().connect(m_interface.service(),
                                               m_interface.path(),
                                               m_interface.interface(),
@@ -37,8 +41,7 @@ Background::Background(QObject *parent)
 QVariantList Background::backgrounds()
 {
     QFuture<QVariantList> future = QtConcurrent::run(&getBackgroundPaths);
-    QVariantList list = future.result();
-    return list;
+    return future.result();
 }
 
 QString Background::currentBackgroundPath()
@@ -50,7 +53,6 @@ void Background::setBackground(QString path)
 {
     if (m_currentPath != path && !path.isEmpty()) {
         m_currentPath = path;
-
         if (m_interface.isValid()) {
             m_interface.call("setWallpaper", path);
             emit backgroundChanged();

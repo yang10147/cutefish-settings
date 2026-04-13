@@ -1,50 +1,24 @@
-/*
- * Copyright (C) 2021 CutefishOS Team.
- *
- * Author:     revenmartin <revenmartin@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-import QtQuick 2.4
-import QtQuick.Controls 2.4
-import QtQuick.Layouts 1.3
-import QtGraphicalEffects 1.0
-import FishUI 1.0 as FishUI
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQml.Models
 import Cutefish.Settings 1.0
-import Cutefish.NetworkManagement 1.0 as NM
+import "./"
 
 Item {
     implicitWidth: 230
-
-    property int itemRadiusV: 8
 
     property alias view: listView
     property alias model: listModel
     property alias currentIndex: listView.currentIndex
 
+    // 侧边栏背景
     Rectangle {
         anchors.fill: parent
-        color: FishUI.Theme.darkMode ? Qt.lighter(FishUI.Theme.backgroundColor, 1.5)
-                                     : Qt.darker(FishUI.Theme.backgroundColor, 1.05)
-        opacity: rootWindow.compositing ? 0.7 : 1.0
+        color: Theme.sidebarColor
 
         Behavior on color {
-            ColorAnimation {
-                duration: 250
-                easing.type: Easing.Linear
-            }
+            ColorAnimation { duration: 250; easing.type: Easing.Linear }
         }
     }
 
@@ -59,7 +33,6 @@ Item {
             iconColor: "#0067FF"
             category: qsTr("Network and connection")
         }
-
         ListElement {
             title: qsTr("Ethernet")
             name: "ethernet"
@@ -68,16 +41,6 @@ Item {
             iconColor: "#0067FF"
             category: qsTr("Network and connection")
         }
-
-//        ListElement {
-//            title: qsTr("Hotspot")
-//            name: "hotspot"
-//            page: "qrc:/qml/Hotspot/Main.qml"
-//            iconSource: "hotspot.svg"
-//            iconColor: "#0067FF"
-//            category: qsTr("Network and connection")
-//        }
-
         ListElement {
             title: qsTr("Bluetooth")
             name: "bluetooth"
@@ -86,16 +49,6 @@ Item {
             iconColor: "#0067FF"
             category: qsTr("Network and connection")
         }
-
-//        ListElement {
-//            title: qsTr("VPN")
-//            name: "vpn"
-//            page: "qrc:/qml/VPN/Main.qml"
-//            iconSource: "bluetooth.svg"
-//            iconColor: "#0067FF"
-//            category: qsTr("Network and connection")
-//        }
-
         ListElement {
             title: qsTr("Proxy")
             name: "proxy"
@@ -104,7 +57,6 @@ Item {
             iconColor: "#0067FF"
             category: qsTr("Network and connection")
         }
-
         ListElement {
             title: qsTr("Display")
             name: "display"
@@ -113,7 +65,6 @@ Item {
             iconColor: "#0087ED"
             category: qsTr("Display and appearance")
         }
-
         ListElement {
             title: qsTr("Appearance")
             name: "appearance"
@@ -122,7 +73,6 @@ Item {
             iconColor: "#03B4CB"
             category: qsTr("Display and appearance")
         }
-
         ListElement {
             title: qsTr("Fonts")
             name: "fonts"
@@ -131,7 +81,6 @@ Item {
             iconColor: "#FFBF36"
             category: qsTr("Display and appearance")
         }
-
         ListElement {
             title: qsTr("Background")
             name: "background"
@@ -140,7 +89,6 @@ Item {
             iconColor: "#34B4A7"
             category: qsTr("Display and appearance")
         }
-
         ListElement {
             title: qsTr("Dock")
             name: "dock"
@@ -149,7 +97,6 @@ Item {
             iconColor: "#8585FC"
             category: qsTr("Display and appearance")
         }
-
         ListElement {
             title: qsTr("User")
             name: "accounts"
@@ -158,7 +105,6 @@ Item {
             iconColor: "#DA7C43"
             category: qsTr("System")
         }
-
         ListElement {
             title: qsTr("Notifications")
             name: "notifications"
@@ -167,7 +113,6 @@ Item {
             iconColor: "#F16884"
             category: qsTr("System")
         }
-
         ListElement {
             title: qsTr("Sound")
             name: "sound"
@@ -176,7 +121,6 @@ Item {
             iconColor: "#F16884"
             category: qsTr("System")
         }
-
         ListElement {
             title: qsTr("Mouse")
             name: "mouse"
@@ -185,7 +129,6 @@ Item {
             iconColor: "#3385FF"
             category: qsTr("System")
         }
-
         ListElement {
             title: qsTr("Touchpad")
             name: "touchpad"
@@ -194,16 +137,6 @@ Item {
             iconColor: "#999999"
             category: qsTr("System")
         }
-
-//        ListElement {
-//            title: qsTr("Application")
-//            name: "application"
-//            page: "qrc:/qml/Application/Main.qml"
-//            iconSource: "accounts.svg"
-//            iconColor: "#DA7C43"
-//            category: qsTr("System")
-//        }
-
         ListElement {
             title: qsTr("Date & Time")
             name: "datetime"
@@ -212,16 +145,14 @@ Item {
             iconColor: "#418CFF"
             category: qsTr("System")
         }
-
         ListElement {
             title: qsTr("Default Applications")
-            name: "datetime"
+            name: "defaultapps"
             page: "qrc:/qml/DefaultApp/Main.qml"
             iconSource: "defaultapps.svg"
             iconColor: "#418CFF"
             category: qsTr("System")
         }
-
         ListElement {
             title: qsTr("Language")
             name: "language"
@@ -230,7 +161,6 @@ Item {
             iconColor: "#20A7FF"
             category: qsTr("System")
         }
-
         ListElement {
             title: qsTr("Battery")
             name: "battery"
@@ -239,7 +169,6 @@ Item {
             iconColor: "#2EC347"
             category: qsTr("System")
         }
-
         ListElement {
             title: qsTr("Power")
             name: "power"
@@ -248,7 +177,6 @@ Item {
             iconSource: "power.svg"
             category: qsTr("System")
         }
-
         ListElement {
             title: qsTr("About")
             name: "about"
@@ -264,13 +192,14 @@ Item {
         anchors.margins: 0
         spacing: 0
 
+        // 标题栏区域
         Label {
             text: rootWindow.title
-            color: rootWindow.active ? FishUI.Theme.textColor : FishUI.Theme.disabledTextColor
-            Layout.preferredHeight: rootWindow.header.height
-            leftPadding: FishUI.Units.largeSpacing + FishUI.Units.smallSpacing
-            rightPadding: FishUI.Units.largeSpacing + FishUI.Units.smallSpacing
-            topPadding: FishUI.Units.smallSpacing
+            color: Theme.textColor
+            Layout.preferredHeight: 40
+            leftPadding: Theme.largeSpacing + Theme.smallSpacing
+            rightPadding: Theme.largeSpacing + Theme.smallSpacing
+            topPadding: Theme.smallSpacing
             bottomPadding: 0
             font.pointSize: 13
         }
@@ -282,45 +211,50 @@ Item {
             clip: true
             model: listModel
 
-            spacing: FishUI.Units.smallSpacing
-            leftMargin: FishUI.Units.largeSpacing
-            rightMargin: FishUI.Units.largeSpacing
+            spacing: Theme.smallSpacing
+            leftMargin: Theme.largeSpacing
+            rightMargin: Theme.largeSpacing
             topMargin: 0
-            bottomMargin: FishUI.Units.largeSpacing
+            bottomMargin: Theme.largeSpacing
 
             ScrollBar.vertical: ScrollBar {}
+            WheelHandler {
+                target: listView
+                onWheel: (event) => {
+                    listView.contentY -= event.angleDelta.y
+                }
+            }
 
             highlightFollowsCurrentItem: true
             highlightMoveDuration: 0
-            highlightResizeDuration : 0
+            highlightResizeDuration: 0
             highlight: Rectangle {
-                radius: FishUI.Theme.mediumRadius
-                color: Qt.rgba(FishUI.Theme.textColor.r,
-                               FishUI.Theme.textColor.g,
-                               FishUI.Theme.textColor.b, 0.05)
+                radius: Theme.mediumRadius
+                color: Qt.rgba(Theme.textColor.r,
+                               Theme.textColor.g,
+                               Theme.textColor.b, 0.05)
                 smooth: true
             }
 
             section.property: "category"
             section.delegate: Item {
                 width: ListView.view.width - ListView.view.leftMargin - ListView.view.rightMargin
-                height: FishUI.Units.fontMetrics.height + FishUI.Units.largeSpacing + FishUI.Units.smallSpacing
+                height: Theme.fontMetricsHeight + Theme.largeSpacing + Theme.smallSpacing
 
                 Text {
                     anchors.left: parent.left
                     anchors.top: parent.top
-                    anchors.leftMargin: Qt.application.layoutDirection === Qt.RightToLeft ? 0 : FishUI.Units.smallSpacing
-                    anchors.rightMargin: FishUI.Units.smallSpacing
-                    anchors.topMargin: FishUI.Units.largeSpacing
-                    anchors.bottomMargin: FishUI.Units.smallSpacing
-                    color: FishUI.Theme.disabledTextColor
+                    anchors.leftMargin: Theme.smallSpacing
+                    anchors.topMargin: Theme.largeSpacing
+                    color: Theme.disabledTextColor
                     font.pointSize: 8
                     text: section
                 }
             }
 
-            FishUI.WheelHandler {
+            WheelHandler {
                 target: listView
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
             }
 
             delegate: Item {
@@ -341,25 +275,23 @@ Item {
                         onClicked: listView.currentIndex = index
                     }
 
-                    radius: FishUI.Theme.mediumRadius
-                    color: mouseArea.pressed ? Qt.rgba(FishUI.Theme.textColor.r,
-                                                       FishUI.Theme.textColor.g,
-                                                       FishUI.Theme.textColor.b, FishUI.Theme.darkMode ? 0.05 : 0.1) :
-                           mouseArea.containsMouse || isCurrent ? Qt.rgba(FishUI.Theme.textColor.r,
-                                                                          FishUI.Theme.textColor.g,
-                                                                          FishUI.Theme.textColor.b, FishUI.Theme.darkMode ? 0.1 : 0.05) :
-                                                                  "transparent"
-
+                    radius: Theme.mediumRadius
+                    color: mouseArea.pressed
+                        ? Qt.rgba(Theme.textColor.r, Theme.textColor.g, Theme.textColor.b,
+                                  Theme.darkMode ? 0.05 : 0.10)
+                        : (mouseArea.containsMouse || isCurrent)
+                            ? Qt.rgba(Theme.textColor.r, Theme.textColor.g, Theme.textColor.b,
+                                      Theme.darkMode ? 0.10 : 0.05)
+                            : "transparent"
                     smooth: true
                 }
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: FishUI.Units.smallSpacing
-                    spacing: FishUI.Units.smallSpacing
+                    anchors.leftMargin: Theme.smallSpacing
+                    spacing: Theme.smallSpacing
 
                     Rectangle {
-                        id: iconRect
                         width: 24
                         height: 24
                         Layout.alignment: Qt.AlignVCenter
@@ -372,28 +304,23 @@ Item {
                         }
 
                         Image {
-                            id: icon
                             anchors.centerIn: parent
                             width: 16
                             height: width
                             source: "qrc:/images/sidebar/dark/" + model.iconSource
                             sourceSize: Qt.size(width, height)
-                            Layout.alignment: Qt.AlignVCenter
                             antialiasing: false
                             smooth: false
                         }
                     }
 
                     Label {
-                        id: itemTitle
                         text: model.title
-                        color: FishUI.Theme.darkMode ? FishUI.Theme.textColor : "#363636"
+                        color: Theme.darkMode ? Theme.textColor : "#363636"
                         font.pointSize: 8
                     }
 
-                    Item {
-                        Layout.fillWidth: true
-                    }
+                    Item { Layout.fillWidth: true }
                 }
             }
         }
@@ -408,28 +335,16 @@ Item {
         }
     }
 
-    Battery {
-        id: _battery
+    property var _battery: Battery {}
+    property var _touchPad: Touchpad {}
 
-        Component.onCompleted: {
+    Timer {
+        interval: 0
+        running: true
+        repeat: false
+        onTriggered: {
             if (!_battery.available)
                 removeItem("battery")
-        }
-    }
-
-    NM.EnabledConnections {
-        id: nmEnabledConnections
-
-        Component.onCompleted: {
-            if (!nmEnabledConnections.wirelessHwEnabled)
-                removeItem("wlan")
-        }
-    }
-
-    Touchpad {
-        id: _touchPad
-
-        Component.onCompleted: {
             if (!_touchPad.available)
                 removeItem("touchpad")
         }

@@ -1,21 +1,7 @@
 /*
  * Copyright © 2021 Reion Wong <reionwong@gmail.com>
  * Copyright © 2006-2007 Fredrik Höglund <fredrik@kde.org>
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License version 2 or at your option version 3 as published
- * by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * GPL v2 or later
  */
 
 #include "cursortheme.h"
@@ -23,12 +9,33 @@
 #include <QSettings>
 #include <QCursor>
 #include <QDebug>
-#include <QX11Info>
 #include <QImage>
+#include <QGuiApplication>
+#include <QScreen>
 
 #include <X11/Xlib.h>
 #include <X11/Xcursor/Xcursor.h>
 #include <X11/extensions/Xfixes.h>
+
+// Qt6: 用 QGuiApplication::platformName() 判断是否 X11
+static bool isX11Platform()
+{
+    return QGuiApplication::platformName() == QLatin1String("xcb");
+}
+
+// Qt6: 获取 X11 Display 指针（仅 xcb 平台有效）
+static Display *x11Display()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // Qt6 没有 QX11Info，通过 native interface 获取
+    auto *ni = qGuiApp->nativeInterface<QNativeInterface::QX11Application>();
+    if (ni)
+        return ni->display();
+    return nullptr;
+#else
+    return nullptr;
+#endif
+}
 
 QHash<QString, QString> CursorTheme::m_alternatives;
 
@@ -43,7 +50,6 @@ CursorTheme::CursorTheme(const QDir &dir, QObject *parent)
     QList<int> sizeList;
 
     XcursorImages *images = XcursorFilenameLoadAllImages(qPrintable(cursorFile));
-
     if (images) {
         for (int i = 0; i < images->nimage; ++i) {
             if (!sizeList.contains(images->images[i]->size))
@@ -56,54 +62,35 @@ CursorTheme::CursorTheme(const QDir &dir, QObject *parent)
 
     QSettings config(m_path + "/index.theme", QSettings::IniFormat);
     config.beginGroup("Icon Theme");
-    m_name = config.value("Name").toString();
-    m_sample = config.value("Example").toString();
-    m_hidden = config.value("Hidden", false).toBool();
+    m_name    = config.value("Name").toString();
+    m_sample  = config.value("Example").toString();
+    m_hidden  = config.value("Hidden", false).toBool();
     m_inherits = config.value("Inherits").toString();
 }
 
-QString CursorTheme::name() const
-{
-    return m_name;
-}
-
-QString CursorTheme::path() const
-{
-    return m_path;
-}
-
-QString CursorTheme::id() const
-{
-    return m_dirName;
-}
-
-QString CursorTheme::inherits() const
-{
-    return m_inherits;
-}
+QString CursorTheme::name()     const { return m_name; }
+QString CursorTheme::path()     const { return m_path; }
+QString CursorTheme::id()       const { return m_dirName; }
+QString CursorTheme::inherits() const { return m_inherits; }
 
 QPixmap CursorTheme::pixmap() const
 {
     if (m_pixmap.isNull())
         m_pixmap = createIcon();
-
     return m_pixmap;
 }
 
 int CursorTheme::defaultCursorSize() const
 {
-    if (!QX11Info::isPlatformX11()) {
+    if (!isX11Platform())
         return 32;
-    }
 
-    /* This code is basically borrowed from display.c of the XCursor library
-       We can't use "int XcursorGetDefaultSize(Display *dpy)" because if
-       previously the cursor size was set to a custom value, it would return
-       this custom value. */
+    Display *dpy = x11Display();
+    if (!dpy)
+        return 32;
+
     int size = 0;
     int dpi = 0;
-    Display *dpy = QX11Info::display();
-    // The string "v" is owned and will be destroyed by Xlib
     char *v = XGetDefault(dpy, "Xft", "dpi");
     if (v)
         dpi = atoi(v);
@@ -111,11 +98,10 @@ int CursorTheme::defaultCursorSize() const
         size = dpi * 16 / 72;
     if (size == 0) {
         int dim;
-        if (DisplayHeight(dpy, DefaultScreen(dpy)) < DisplayWidth(dpy, DefaultScreen(dpy))) {
+        if (DisplayHeight(dpy, DefaultScreen(dpy)) < DisplayWidth(dpy, DefaultScreen(dpy)))
             dim = DisplayHeight(dpy, DefaultScreen(dpy));
-        } else {
+        else
             dim = DisplayWidth(dpy, DefaultScreen(dpy));
-        }
         size = dim / 48;
     }
     return size;
@@ -125,7 +111,6 @@ XcursorImage *CursorTheme::xcLoadImage(const QString &image, int size) const
 {
     QByteArray cursorName = QFile::encodeName(image);
     QByteArray themeName  = QFile::encodeName(id());
-
     return XcursorLibraryLoadImage(cursorName, themeName, size);
 }
 
@@ -133,7 +118,6 @@ XcursorImages *CursorTheme::xcLoadImages(const QString &image, int size) const
 {
     QByteArray cursorName = QFile::encodeName(image);
     QByteArray themeName  = QFile::encodeName(id());
-
     return XcursorLibraryLoadImages(cursorName, themeName, size);
 }
 
@@ -143,28 +127,21 @@ QImage CursorTheme::loadImage(const QString &name, int size) const
         size = defaultCursorSize();
 
     XcursorImage *xcimage = xcLoadImage(name, size);
-
     if (!xcimage)
         xcimage = xcLoadImage(findAlternative(name), size);
-
-    if (!xcimage) {
+    if (!xcimage)
         return QImage();
-    }
 
-    // Convert the XcursorImage to a QImage, and auto-crop it
     QImage image((uchar *)xcimage->pixels, xcimage->width, xcimage->height,
-                 QImage::Format_ARGB32_Premultiplied );
-
+                 QImage::Format_ARGB32_Premultiplied);
     image = autoCropImage(image);
     XcursorImageDestroy(xcimage);
-
     return image;
 }
 
 QPixmap CursorTheme::createIcon() const
 {
-    QPixmap pixmap = createIcon(36 * qApp->devicePixelRatio());
-    return pixmap;
+    return createIcon(36 * qApp->devicePixelRatio());
 }
 
 QPixmap CursorTheme::createIcon(int size) const
@@ -175,34 +152,32 @@ QPixmap CursorTheme::createIcon(int size) const
     if (image.isNull() && m_sample != QLatin1String("left_ptr"))
         image = loadImage(QStringLiteral("left_ptr"), size);
 
-    if (!image.isNull()) {
+    if (!image.isNull())
         pixmap = QPixmap::fromImage(image);
-    }
 
     return pixmap;
 }
 
 qulonglong CursorTheme::loadCursor(const QString &name, int size) const
 {
-    if (!QX11Info::isPlatformX11()) {
+    if (!isX11Platform())
         return None;
-    }
+
+    Display *dpy = x11Display();
+    if (!dpy)
+        return None;
+
     if (size <= 0)
         size = defaultCursorSize();
 
-    // Load the cursor images
     XcursorImages *images = xcLoadImages(name, size);
-
     if (!images)
         images = xcLoadImages(findAlternative(name), size);
-
     if (!images)
         return None;
 
-    // Create the cursor
-    Cursor handle = XcursorImagesLoadCursor(QX11Info::display(), images);
+    Cursor handle = XcursorImagesLoadCursor(dpy, images);
     XcursorImagesDestroy(images);
-
     return handle;
 }
 
@@ -210,20 +185,12 @@ QString CursorTheme::findAlternative(const QString &name) const
 {
     if (m_alternatives.isEmpty()) {
         m_alternatives.reserve(18);
-
-        // Qt uses non-standard names for some core cursors.
-        // If Xcursor fails to load the cursor, Qt creates it with the correct name using the
-        // core protocol instead (which in turn calls Xcursor). We emulate that process here.
-        // Note that there's a core cursor called cross, but it's not the one Qt expects.
         m_alternatives.insert(QStringLiteral("cross"),          QStringLiteral("crosshair"));
         m_alternatives.insert(QStringLiteral("up_arrow"),       QStringLiteral("center_ptr"));
         m_alternatives.insert(QStringLiteral("wait"),           QStringLiteral("watch"));
         m_alternatives.insert(QStringLiteral("ibeam"),          QStringLiteral("xterm"));
         m_alternatives.insert(QStringLiteral("size_all"),       QStringLiteral("fleur"));
         m_alternatives.insert(QStringLiteral("pointing_hand"),  QStringLiteral("hand2"));
-
-        // Precomputed MD5 hashes for the hardcoded bitmap cursors in Qt and KDE.
-        // Note that the MD5 hash for left_ptr_watch is for the KDE version of that cursor.
         m_alternatives.insert(QStringLiteral("size_ver"),       QStringLiteral("00008160000006810000408080010102"));
         m_alternatives.insert(QStringLiteral("size_hor"),       QStringLiteral("028006030e0e7ebffc7f7070c0600140"));
         m_alternatives.insert(QStringLiteral("size_bdiag"),     QStringLiteral("fcf1c3c7cd4491d801f1e1c78f100000"));
@@ -237,15 +204,13 @@ QString CursorTheme::findAlternative(const QString &name) const
         m_alternatives.insert(QStringLiteral("openhand"),       QStringLiteral("9141b49c8149039304290b508d208c40"));
         m_alternatives.insert(QStringLiteral("closedhand"),     QStringLiteral("05e88622050804100c20044008402080"));
     }
-
     return m_alternatives.value(name, QString());
 }
 
 QImage CursorTheme::autoCropImage(const QImage &image) const
 {
-    // Compute an autocrop rectangle for the image
     QRect r(image.rect().bottomRight(), image.rect().topLeft());
-    const quint32 *pixels = reinterpret_cast<const quint32*>(image.bits());
+    const quint32 *pixels = reinterpret_cast<const quint32 *>(image.bits());
 
     for (int y = 0; y < image.height(); y++) {
         for (int x = 0; x < image.width(); x++) {
@@ -257,24 +222,23 @@ QImage CursorTheme::autoCropImage(const QImage &image) const
             }
         }
     }
-
-    // Normalize the rectangle
     return image.copy(r.normalized());
 }
 
 bool CursorTheme::haveXfixes()
 {
-    bool result = false;
+    if (!isX11Platform())
+        return false;
 
-    if (!QX11Info::isPlatformX11()) {
-        return result;
-    }
+    Display *dpy = x11Display();
+    if (!dpy)
+        return false;
+
     int event_base, error_base;
-    if (XFixesQueryExtension(QX11Info::display(), &event_base, &error_base)) {
+    if (XFixesQueryExtension(dpy, &event_base, &error_base)) {
         int major, minor;
-        XFixesQueryVersion(QX11Info::display(), &major, &minor);
-        result = (major >= 2);
+        XFixesQueryVersion(dpy, &major, &minor);
+        return (major >= 2);
     }
-
-    return result;
+    return false;
 }

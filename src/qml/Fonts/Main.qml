@@ -17,13 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.4
-import QtQuick.Controls 2.4
-import QtQuick.Layouts 1.3
-import QtGraphicalEffects 1.0
-
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Cutefish.Settings 1.0
-import FishUI 1.0 as FishUI
 import "../"
 
 ItemPage {
@@ -71,26 +68,19 @@ ItemPage {
         ColumnLayout {
             id: layout
             anchors.fill: parent
-            spacing: FishUI.Units.largeSpacing * 2
+            spacing: Theme.largeSpacing * 2
 
-            // Font
             RoundedItem {
-//                Label {
-//                    text: qsTr("Font")
-//                    color: FishUI.Theme.disabledTextColor
-//                    bottomPadding: FishUI.Units.smallSpacing
-//                }
-
                 GridLayout {
                     rows: 3
                     columns: 2
 
-                    columnSpacing: FishUI.Units.largeSpacing * 1.5
-                    rowSpacing: FishUI.Units.largeSpacing * 1.5
+                    columnSpacing: Theme.largeSpacing * 1.5
+                    rowSpacing: Theme.largeSpacing * 1.5
 
                     Label {
                         text: qsTr("General Font")
-                        bottomPadding: FishUI.Units.smallSpacing
+                        bottomPadding: Theme.smallSpacing
                     }
 
                     ComboBox {
@@ -100,14 +90,14 @@ ItemPage {
                         Layout.fillWidth: true
                         topInset: 0
                         bottomInset: 0
-                        leftPadding: FishUI.Units.largeSpacing
-                        rightPadding: FishUI.Units.largeSpacing
+                        leftPadding: Theme.largeSpacing
+                        rightPadding: Theme.largeSpacing
                         onActivated: appearance.setGenericFontFamily(currentText)
                     }
 
                     Label {
                         text: qsTr("Fixed Font")
-                        bottomPadding: FishUI.Units.smallSpacing
+                        bottomPadding: Theme.smallSpacing
                     }
 
                     ComboBox {
@@ -117,14 +107,14 @@ ItemPage {
                         Layout.fillWidth: true
                         topInset: 0
                         bottomInset: 0
-                        leftPadding: FishUI.Units.largeSpacing
-                        rightPadding: FishUI.Units.largeSpacing
+                        leftPadding: Theme.largeSpacing
+                        rightPadding: Theme.largeSpacing
                         onActivated: appearance.setFixedFontFamily(currentText)
                     }
 
                     Label {
                         text: qsTr("Font Size")
-                        bottomPadding: FishUI.Units.smallSpacing
+                        bottomPadding: Theme.smallSpacing
                     }
 
                     TabBar {
@@ -185,7 +175,7 @@ ItemPage {
 
                     Label {
                         text: qsTr("Hinting")
-                        bottomPadding: FishUI.Units.smallSpacing
+                        bottomPadding: Theme.smallSpacing
                     }
 
                     ComboBox {
@@ -198,7 +188,7 @@ ItemPage {
 
                     Label {
                         text: qsTr("Anti-Aliasing")
-                        bottomPadding: FishUI.Units.smallSpacing
+                        bottomPadding: Theme.smallSpacing
                     }
 
                     Switch {
@@ -207,7 +197,6 @@ ItemPage {
                         checked: fonts.antiAliasing
                         onCheckedChanged: fonts.antiAliasing = checked
                     }
-
                 }
             }
         }

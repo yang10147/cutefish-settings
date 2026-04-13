@@ -1,6 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>qml/main.qml</file>
+        <file>qml/qmldir</file>
+        <file>qml/Theme.qml</file>
         <file>qml/SideBar.qml</file>
         <file>qml/ItemPage.qml</file>
         <file>images/dark/display-brightness-low-symbolic.svg</file>

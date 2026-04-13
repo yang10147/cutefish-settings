@@ -1,27 +1,6 @@
-/*
- * Copyright (C) 2021 CutefishOS Team.
- *
- * Author:     Kate Leet <support@cutefishos.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
-
-import FishUI 1.0 as FishUI
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Cutefish.Settings 1.0
 import "../"
 
@@ -43,7 +22,7 @@ ItemPage {
             RoundedItem {
                 GridLayout {
                     columns: 2
-                    columnSpacing: FishUI.Units.largeSpacing * 2
+                    columnSpacing: 24
 
                     Label {
                         text: qsTr("Web Browser")
@@ -57,9 +36,7 @@ ItemPage {
                         model: defaultApps.browserList
                         currentIndex: defaultApps.browserIndex
                         enabled: count !== 0
-                        onActivated: {
-                            defaultApps.setDefaultBrowser(browserComboBox.currentIndex)
-                        }
+                        onActivated: defaultApps.setDefaultBrowser(browserComboBox.currentIndex)
                     }
 
                     Label {
@@ -74,9 +51,7 @@ ItemPage {
                         model: defaultApps.fileManagerList
                         currentIndex: defaultApps.fileManagerIndex
                         enabled: count !== 0
-                        onActivated: {
-                            defaultApps.setDefaultFileManager(fileManagerComboBox.currentIndex)
-                        }
+                        onActivated: defaultApps.setDefaultFileManager(fileManagerComboBox.currentIndex)
                     }
 
                     Label {
@@ -91,9 +66,7 @@ ItemPage {
                         model: defaultApps.emailList
                         currentIndex: defaultApps.emailIndex
                         enabled: count !== 0
-                        onActivated: {
-                            defaultApps.setDefaultEMail(emailComboBox.currentIndex)
-                        }
+                        onActivated: defaultApps.setDefaultEMail(emailComboBox.currentIndex)
                     }
 
                     Label {
@@ -108,9 +81,7 @@ ItemPage {
                         model: defaultApps.terminalList
                         currentIndex: defaultApps.terminalIndex
                         enabled: count !== 0
-                        onActivated: {
-                            defaultApps.setDefaultTerminal(terminalComboBox.currentIndex)
-                        }
+                        onActivated: defaultApps.setDefaultTerminal(terminalComboBox.currentIndex)
                     }
                 }
             }

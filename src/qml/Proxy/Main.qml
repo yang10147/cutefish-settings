@@ -1,29 +1,8 @@
-/*
- * Copyright (C) 2021 CutefishOS Team.
- *
- * Author:     Reion Wong <reion@cutefishos.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-import QtQuick 2.12
-import QtQml 2.15
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
-import QtQuick.Dialogs 1.2
-
-import FishUI 1.0 as FishUI
+import QtQuick
+import QtQml
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Dialogs
 import Cutefish.Settings 1.0
 import "../"
 
@@ -57,19 +36,17 @@ ItemPage {
         ColumnLayout {
             id: layout
             anchors.fill: parent
-            spacing: FishUI.Units.largeSpacing * 2
+            spacing: Theme.largeSpacing * 2
 
             RoundedItem {
                 id: mainItem
-                spacing: FishUI.Units.largeSpacing
+                spacing: Theme.largeSpacing
 
                 RadioButton {
                     id: noProxyRadioButton
                     checked: networkProxy.flag === 0
                     text: qsTr("No Proxy")
-                    onClicked: {
-                        networkProxy.flag = 0
-                    }
+                    onClicked: networkProxy.flag = 0
                 }
 
                 RadioButton {
@@ -77,18 +54,14 @@ ItemPage {
                     checked: networkProxy.flag === 1
                     text: qsTr("Use proxy auto configuration URL")
                     visible: false
-                    onClicked: {
-                        networkProxy.flag = 1
-                    }
+                    onClicked: networkProxy.flag = 1
                 }
 
                 RadioButton {
                     id: manualProxyRadioButton
                     checked: networkProxy.flag === 2
                     text: qsTr("Use manually specified proxy configuration")
-                    onClicked: {
-                        networkProxy.flag = 2
-                    }
+                    onClicked: networkProxy.flag = 2
                 }
             }
 
@@ -98,11 +71,8 @@ ItemPage {
 
                 property bool needSave: false
 
-                Component.onCompleted: needSave = false
-
                 RowLayout {
-                    id: autoScriptProxyLayout
-                    spacing: FishUI.Units.largeSpacing
+                    spacing: Theme.largeSpacing
                     visible: autoScriptProxyRadioButton.checked
 
                     TextField {
@@ -110,10 +80,7 @@ ItemPage {
                         Layout.fillWidth: true
                         text: networkProxy.scriptProxy
                         height: 40
-
-                        onTextChanged: {
-                            proxyItem.needSave = true
-                        }
+                        onTextChanged: proxyItem.needSave = true
                     }
 
                     Button {
@@ -123,71 +90,47 @@ ItemPage {
                     }
                 }
 
-                // ----------------------
                 GridLayout {
                     visible: manualProxyRadioButton.checked
                     columns: 4
-                    columnSpacing: FishUI.Units.largeSpacing
-                    rowSpacing: FishUI.Units.largeSpacing
+                    columnSpacing: Theme.largeSpacing
+                    rowSpacing: Theme.largeSpacing
 
-                    Label {
-                        text: qsTr("HTTP Proxy")
-                    }
+                    Label { text: qsTr("HTTP Proxy") }
 
                     TextField {
                         id: httpProxyField
                         Layout.fillWidth: true
                         height: 40
                         text: networkProxy.httpProxy
-                        onTextChanged: {
-                            proxyItem.needSave = true
-                        }
+                        onTextChanged: proxyItem.needSave = true
                     }
 
-                    Label {
-                        text: qsTr("Port")
-                    }
+                    Label { text: qsTr("Port") }
 
                     TextField {
                         id: httpProxyPortField
                         height: 40
                         Layout.preferredWidth: 80
-
                         text: networkProxy.httpProxyPort
-
-                        validator: IntValidator { bottom: 0; top: 999999}
-
-                        onTextChanged: {
-                            proxyItem.needSave = true
-                        }
+                        validator: IntValidator { bottom: 0; top: 999999 }
+                        onTextChanged: proxyItem.needSave = true
                     }
 
-                    Item {
-                        width: 1
-                    }
+                    Item { width: 1 }
 
                     CheckBox {
                         id: forFtpCheckBox
                         text: qsTr("Also use this proxy for FTP")
                         Layout.fillWidth: true
                         checked: networkProxy.useSameProxy
-                        onClicked: {
-                            proxyItem.needSave = true
-                        }
+                        onClicked: proxyItem.needSave = true
                     }
 
-                    Item {
-                        width: 1
-                    }
+                    Item { width: 1 }
+                    Item { width: 1 }
 
-                    Item {
-                        width: 1
-                    }
-
-                    // FTP
-                    Label {
-                        text: qsTr("FTP Proxy")
-                    }
+                    Label { text: qsTr("FTP Proxy") }
 
                     TextField {
                         id: ftpProxyTextField
@@ -195,60 +138,40 @@ ItemPage {
                         height: 40
                         enabled: !forFtpCheckBox.checked
                         text: networkProxy.ftpProxy
-                        onTextChanged: {
-                            proxyItem.needSave = true
-                        }
+                        onTextChanged: proxyItem.needSave = true
                     }
 
-                    Label {
-                        text: qsTr("Port")
-                    }
+                    Label { text: qsTr("Port") }
 
                     TextField {
                         id: ftpProxyPortField
                         height: 40
                         Layout.preferredWidth: 80
                         enabled: !forFtpCheckBox.checked
-
                         text: networkProxy.ftpProxyPort
-                        validator: IntValidator { bottom: 0; top: 999999}
-
-                        onTextChanged: {
-                            proxyItem.needSave = true
-                        }
+                        validator: IntValidator { bottom: 0; top: 999999 }
+                        onTextChanged: proxyItem.needSave = true
                     }
 
-                    // SOCKS
-                    Label {
-                        text: qsTr("SOCKS Proxy")
-                    }
+                    Label { text: qsTr("SOCKS Proxy") }
 
                     TextField {
                         id: socksProxyField
                         Layout.fillWidth: true
                         height: 40
                         text: networkProxy.socksProxy
-
-                        onTextChanged: {
-                            proxyItem.needSave = true
-                        }
+                        onTextChanged: proxyItem.needSave = true
                     }
 
-                    Label {
-                        text: qsTr("Port")
-                    }
+                    Label { text: qsTr("Port") }
 
                     TextField {
                         id: socksProxyPortField
                         height: 40
                         Layout.preferredWidth: 80
-
                         text: networkProxy.socksProxyPort
-                        validator: IntValidator { bottom: 0; top: 999999}
-
-                        onTextChanged: {
-                            proxyItem.needSave = true
-                        }
+                        validator: IntValidator { bottom: 0; top: 999999 }
+                        onTextChanged: proxyItem.needSave = true
                     }
                 }
 
@@ -259,13 +182,10 @@ ItemPage {
                 RowLayout {
                     visible: proxyItem.needSave
 
-                    Item {
-                        Layout.fillWidth: true
-                    }
+                    Item { Layout.fillWidth: true }
 
                     Button {
                         text: qsTr("Save")
-
                         onClicked: {
                             proxyItem.needSave = false
                             networkProxy.scriptProxy = autoScriptField.text
@@ -282,15 +202,16 @@ ItemPage {
             }
 
             Item {
-                height: FishUI.Units.smallSpacing
+                height: Theme.smallSpacing
             }
         }
     }
 
+    // Qt6: FileDialog 已在 QtQuick.Dialogs 中，API 略有变化
     FileDialog {
         id: fileDialog
         onAccepted: {
-            autoScriptField.text = fileDialog.fileUrl.toString().replace("file://", "")
+            autoScriptField.text = selectedFile.toString().replace("file://", "")
             networkProxy.scriptProxy = autoScriptField.text
         }
     }

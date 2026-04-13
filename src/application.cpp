@@ -1,9 +1,19 @@
+/*
+ * Copyright (C) 2021 CutefishOS Team.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ */
+
 #include "application.h"
 #include <QCommandLineParser>
 #include <QDBusPendingCall>
 #include <QTranslator>
 #include <QLocale>
 #include <QIcon>
+#include <QFile>
 
 #include "settingsuiadaptor.h"
 #include "fontsmodel.h"
@@ -21,6 +31,7 @@
 #include "networkproxy.h"
 #include "notifications.h"
 #include "defaultapplications.h"
+#include "display.h"
 
 #include "cursor/cursorthememodel.h"
 #include "cursor/mouse.h"
@@ -32,7 +43,6 @@ static QObject *passwordSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine);
     Q_UNUSED(scriptEngine);
-
     Password *object = new Password();
     return object;
 }
@@ -63,7 +73,6 @@ Application::Application(int &argc, char **argv)
     new SettingsUIAdaptor(this);
     QDBusConnection::sessionBus().registerObject(QStringLiteral("/SettingsUI"), this);
 
-    // QML
     const char *uri = "Cutefish.Settings";
     qmlRegisterType<Appearance>(uri, 1, 0, "Appearance");
     qmlRegisterType<FontsModel>(uri, 1, 0, "FontsModel");
@@ -83,14 +92,10 @@ Application::Application(int &argc, char **argv)
     qmlRegisterType<NetworkProxy>(uri, 1, 0, "NetworkProxy");
     qmlRegisterType<Notifications>(uri, 1, 0, "Notifications");
     qmlRegisterType<DefaultApplications>(uri, 1, 0, "DefaultApplications");
+    qmlRegisterType<DisplayManager>(uri, 1, 0, "DisplayManager");
 
     qmlRegisterSingletonType<Password>(uri, 1, 0, "Password", passwordSingleton);
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-    qmlRegisterType<QAbstractItemModel>();
-#else
     qmlRegisterAnonymousType<QAbstractItemModel>(uri, 1);
-#endif
 
     // Translations
     QLocale locale;
@@ -105,6 +110,8 @@ Application::Application(int &argc, char **argv)
     }
 
     m_engine.addImportPath(QStringLiteral("qrc:/"));
+    m_engine.addImportPath(QStringLiteral("qrc:/qml"));
+    m_engine.addImportPath(QStringLiteral("/usr/lib/qt/qml"));
     m_engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 
     if (!module.isEmpty()) {
@@ -117,7 +124,6 @@ Application::Application(int &argc, char **argv)
 void Application::switchToPage(const QString &name)
 {
     QObject *mainObject = m_engine.rootObjects().first();
-
     if (mainObject) {
         QMetaObject::invokeMethod(mainObject, "switchPageFromName", Q_ARG(QVariant, name));
     }

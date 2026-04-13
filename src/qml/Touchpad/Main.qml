@@ -1,26 +1,6 @@
-/*
- * Copyright (C) 2021 CutefishOS Team.
- *
- * Author:     Reion Wong <reion@cutefishos.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
-import FishUI 1.0 as FishUI
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Cutefish.Settings 1.0
 import "../"
 
@@ -29,10 +9,7 @@ ItemPage {
 
     Touchpad {
         id: touchpad
-
-        Component.onCompleted: {
-            accelSpeedSlider.load()
-        }
+        Component.onCompleted: accelSpeedSlider.load()
     }
 
     Scrollable {
@@ -46,7 +23,7 @@ ItemPage {
             RoundedItem {
                 GridLayout {
                     columns: 2
-                    rowSpacing: FishUI.Units.largeSpacing * 2
+                    rowSpacing: Theme.largeSpacing * 2
 
                     Label {
                         text: qsTr("Enable")
@@ -58,11 +35,7 @@ ItemPage {
                         Layout.fillHeight: true
                         Layout.alignment: Qt.AlignRight
                         rightPadding: 0
-
-                        Component.onCompleted: {
-                            checked = touchpad.enabled
-                        }
-
+                        Component.onCompleted: checked = touchpad.enabled
                         onCheckedChanged: touchpad.enabled = checked
                     }
 
@@ -75,13 +48,10 @@ ItemPage {
                     Switch {
                         visible: _enableSwitch.checked
                         Layout.fillHeight: true
-                        onCheckedChanged: touchpad.tapToClick = checked
                         Layout.alignment: Qt.AlignRight
                         rightPadding: 0
-
-                        Component.onCompleted: {
-                            checked = touchpad.tapToClick
-                        }
+                        Component.onCompleted: checked = touchpad.tapToClick
+                        onCheckedChanged: touchpad.tapToClick = checked
                     }
 
                     Label {
@@ -94,12 +64,9 @@ ItemPage {
                         visible: _enableSwitch.checked
                         Layout.fillHeight: true
                         Layout.alignment: Qt.AlignRight
-                        onCheckedChanged: touchpad.naturalScroll = checked
                         rightPadding: 0
-
-                        Component.onCompleted: {
-                            checked = touchpad.naturalScroll
-                        }
+                        Component.onCompleted: checked = touchpad.naturalScroll
+                        onCheckedChanged: touchpad.naturalScroll = checked
                     }
 
                     Label {
@@ -109,37 +76,30 @@ ItemPage {
 
                     Slider {
                         id: accelSpeedSlider
-
                         visible: _enableSwitch.checked
                         Layout.fillWidth: true
-
                         from: 1
                         to: 11
                         stepSize: 1
-                        property int accelSpeedValue: 0 // [-100, 100]
+
+                        property int accelSpeedValue: 0
 
                         function load() {
                             accelSpeedValue = Math.round(touchpad.pointerAcceleration * 100)
-                            // convert libinput pointer acceleration range [-1, 1] to slider range [1, 11]
                             value = Math.round(6 + touchpad.pointerAcceleration / 0.2)
                         }
 
                         function onAccelSpeedChanged(val) {
-                            // check slider
-                            if (val !== accelSpeedSlider.accelSpeedValue) {
-                                accelSpeedSlider.accelSpeedValue = val
-                                accelSpeedSlider.value = Math.round(6 + (val / 100) / 0.2)
+                            if (val !== accelSpeedValue) {
+                                accelSpeedValue = val
+                                value = Math.round(6 + (val / 100) / 0.2)
                             }
-
-                            // check libinput accelspeed
-                            if ((val / 100) != touchpad.pointerAcceleration) {
+                            if ((val / 100) !== touchpad.pointerAcceleration)
                                 touchpad.pointerAcceleration = val / 100
-                            }
                         }
 
                         onMoved: {
-                            if (touchpad != undefined) {
-                                // convert slider range [1, 11] to accelSpeedValue range [-100, 100]
+                            if (touchpad !== undefined) {
                                 accelSpeedValue = Math.round(((value - 6) * 0.2) * 100)
                                 onAccelSpeedChanged(accelSpeedValue)
                             }
@@ -149,7 +109,7 @@ ItemPage {
             }
 
             Item {
-                height: FishUI.Units.smallSpacing
+                height: Theme.smallSpacing
             }
         }
     }

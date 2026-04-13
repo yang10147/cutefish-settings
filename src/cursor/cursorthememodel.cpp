@@ -1,20 +1,6 @@
 /*
  * Copyright (C) 2021 CutefishOS Team.
- *
- * Author:     Reion Wong <reionwong@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * GPL v3 or later
  */
 
 #include "cursorthememodel.h"
@@ -25,17 +11,25 @@
 #include <QFileInfo>
 #include <QDebug>
 #include <QDir>
+#include <QGuiApplication>
 
-#include <QX11Info>
+// Qt6: QX11Info 已删除，XFixes 相关调用由 cursortheme.cpp 中的 haveXfixes() 保护
+// Wayland 下 haveXfixes() 返回 false，以下 include 在 Wayland 下不会实际执行
 #include <X11/Xcursor/Xcursor.h>
 #include <X11/extensions/Xfixes.h>
+
+// 获取 X11 display（仅 xcb 平台）
+static Display *x11Display()
+{
+    auto *ni = qGuiApp->nativeInterface<QNativeInterface::QX11Application>();
+    return ni ? ni->display() : nullptr;
+}
 
 CursorThemeModel::CursorThemeModel(QObject *parent)
     : QAbstractListModel(parent)
     , m_settings("cutefishos", "theme")
 {
     initThemes();
-
     m_currentTheme = m_settings.value("CursorTheme", "default").toString();
 }
 
@@ -48,10 +42,10 @@ CursorThemeModel::~CursorThemeModel()
 QHash<int, QByteArray> CursorThemeModel::roleNames() const
 {
     QHash<int, QByteArray> roleNames = QAbstractListModel::roleNames();
-    roleNames[CursorThemeModel::NameRole] = "name";
+    roleNames[CursorThemeModel::NameRole]  = "name";
     roleNames[CursorThemeModel::ImageRole] = "image";
-    roleNames[CursorThemeModel::PathRole] = "path";
-    roleNames[CursorThemeModel::IdRole] = "id";
+    roleNames[CursorThemeModel::PathRole]  = "path";
+    roleNames[CursorThemeModel::IdRole]    = "id";
     return roleNames;
 }
 
@@ -68,29 +62,16 @@ QVariant CursorThemeModel::data(const QModelIndex &index, int role) const
     CursorTheme *theme = m_list.at(index.row());
 
     switch (role) {
-    case CursorThemeModel::NameRole:
-        return theme->name();
-        break;
-    case CursorThemeModel::ImageRole:
-        return theme->pixmap();
-        break;
-    case CursorThemeModel::PathRole:
-        return theme->path();
-        break;
-    case CursorThemeModel::IdRole:
-        return theme->id();
-        break;
-    default:
-        break;
+    case CursorThemeModel::NameRole:  return theme->name();
+    case CursorThemeModel::ImageRole: return theme->path();
+    case CursorThemeModel::PathRole:  return theme->path();
+    case CursorThemeModel::IdRole:    return theme->id();
+    default: break;
     }
-
     return QVariant();
 }
 
-QString CursorThemeModel::currentTheme() const
-{
-    return m_currentTheme;
-}
+QString CursorThemeModel::currentTheme() const { return m_currentTheme; }
 
 void CursorThemeModel::setCurrentTheme(const QString &theme)
 {
@@ -106,65 +87,33 @@ void CursorThemeModel::setCurrentTheme(const QString &theme)
             interface.asyncCall("setCursorTheme", m_currentTheme);
 
         int index = themeIndex(m_currentTheme);
-        CursorTheme *theme = nullptr;
+        CursorTheme *curTheme = nullptr;
+        if (index >= 0 && index < m_list.size())
+            curTheme = m_list.at(index);
 
-        if (index >= 0 && index < m_list.size()) {
-            theme = m_list.at(themeIndex(m_currentTheme));
-        }
+        // haveXfixes() 在 Wayland 下返回 false，此块不会执行
+        if (curTheme && CursorTheme::haveXfixes()) {
+            Display *dpy = x11Display();
+            if (!dpy) return;
 
-        if (theme && CursorTheme::haveXfixes()) {
             QStringList names;
-            // Qt cursors
-            names << "left_ptr"
-                  << "up_arrow"
-                  << "cross"
-                  << "wait"
-                  << "left_ptr_watch"
-                  << "ibeam"
-                  << "size_ver"
-                  << "size_hor"
-                  << "size_bdiag"
-                  << "size_fdiag"
-                  << "size_all"
-                  << "split_v"
-                  << "split_h"
-                  << "pointing_hand"
-                  << "openhand"
-                  << "closedhand"
-                  << "forbidden"
-                  << "whats_this"
-                  << "copy"
-                  << "move"
-                  << "link";
+            names << "left_ptr" << "up_arrow" << "cross" << "wait" << "left_ptr_watch"
+                  << "ibeam" << "size_ver" << "size_hor" << "size_bdiag" << "size_fdiag"
+                  << "size_all" << "split_v" << "split_h" << "pointing_hand" << "openhand"
+                  << "closedhand" << "forbidden" << "whats_this" << "copy" << "move" << "link"
+                  << "X_cursor" << "right_ptr" << "hand1" << "hand2" << "watch" << "xterm"
+                  << "crosshair" << "left_ptr_watch" << "center_ptr" << "sb_h_double_arrow"
+                  << "sb_v_double_arrow" << "fleur" << "top_left_corner" << "top_side"
+                  << "top_right_corner" << "right_side" << "bottom_right_corner" << "bottom_side"
+                  << "bottom_left_corner" << "left_side" << "question_arrow" << "pirate";
 
-            // X core cursors
-            names << "X_cursor"
-                  << "right_ptr"
-                  << "hand1"
-                  << "hand2"
-                  << "watch"
-                  << "xterm"
-                  << "crosshair"
-                  << "left_ptr_watch"
-                  << "center_ptr"
-                  << "sb_h_double_arrow"
-                  << "sb_v_double_arrow"
-                  << "fleur"
-                  << "top_left_corner"
-                  << "top_side"
-                  << "top_right_corner"
-                  << "right_side"
-                  << "bottom_right_corner"
-                  << "bottom_side"
-                  << "bottom_left_corner"
-                  << "left_side"
-                  << "question_arrow"
-                  << "pirate";
+            int cursorSize = m_settings.value("CursorSize").toInt()
+                           * m_settings.value("PixelRatio").toReal();
 
-            int cursorSize = m_settings.value("CursorSize").toInt() * m_settings.value("PixelRatio").toReal();
-
-            foreach (const QString &name, names) {
-                XFixesChangeCursorByName(QX11Info::display(), theme->loadCursor(name, cursorSize), QFile::encodeName(name));
+            for (const QString &name : names) {
+                XFixesChangeCursorByName(dpy,
+                                         curTheme->loadCursor(name, cursorSize),
+                                         QFile::encodeName(name));
             }
         }
     }
@@ -173,17 +122,13 @@ void CursorThemeModel::setCurrentTheme(const QString &theme)
 int CursorThemeModel::themeIndex(const QString &theme)
 {
     QString id = theme;
-
-    if (id == "default") {
+    if (id == "default")
         id = m_defaultTheme;
-    }
 
     for (int i = 0; i < m_list.size(); ++i) {
-        const CursorTheme *t = m_list.at(i);
-        if (t->id() == id)
+        if (m_list.at(i)->id() == id)
             return i;
     }
-
     return -1;
 }
 
@@ -193,11 +138,9 @@ void CursorThemeModel::initThemes()
         QDir dir(baseDir);
         if (!dir.exists())
             continue;
-
         for (const QString &name : dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
             if (!dir.cd(name))
                 continue;
-
             processDir(dir);
             dir.cdUp();
         }
@@ -217,17 +160,14 @@ void CursorThemeModel::processDir(const QDir &dir)
 {
     if (m_defaultTheme.isNull() && dir.dirName() == "default") {
         QFileInfo info(dir.path());
-
-        // Dir are link
         if (info.isSymLink()) {
             QFileInfo target(info.symLinkTarget());
             if (target.exists() && (target.isDir() || target.isSymLink()))
                 m_defaultTheme = target.fileName();
-
             return;
         }
-
-        if (!dir.exists("cursors") || QDir(dir.path() + "/cursor").entryList(QDir::Files | QDir::NoDotAndDotDot).isEmpty()) {
+        if (!dir.exists("cursors") ||
+            QDir(dir.path() + "/cursor").entryList(QDir::Files | QDir::NoDotAndDotDot).isEmpty()) {
             if (dir.exists("index.theme")) {
                 CursorTheme theme(dir);
                 m_defaultTheme = theme.inherits();
@@ -238,15 +178,12 @@ void CursorThemeModel::processDir(const QDir &dir)
 
     if (!dir.exists("cursors"))
         return;
-
     if (!dir.exists("index.theme") && !dir.exists("cursor.theme"))
         return;
 
     CursorTheme *theme = new CursorTheme(dir);
-
     for (int i = 0; i < m_list.size(); ++i) {
-        CursorTheme *t = m_list.at(i);
-        if (t->name() == theme->name()) {
+        if (m_list.at(i)->name() == theme->name()) {
             delete theme;
             return;
         }

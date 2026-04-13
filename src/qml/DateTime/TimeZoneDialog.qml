@@ -1,40 +1,29 @@
 /*
  * Copyright (C) 2021 CutefishOS Team.
  *
- * Author:     Reion Wong <reionwong@gmail.com>
- *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Window 2.12
-import QtQuick.Layouts 1.12
-import FishUI 1.0 as FishUI
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Window
+import QtQuick.Layouts
 
-FishUI.Window {
+Window {
     id: control
     width: 900
     height: 600
     minimumWidth: 800
     minimumHeight: 500
     visible: false
-    flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+    flags: Qt.Dialog | Qt.WindowTitleHint | Qt.WindowCloseButtonHint
 
-    background.color: FishUI.Theme.secondBackgroundColor
-    background.opacity: control.compositing ? 0.5 : 1.0
-    contentTopMargin: 0
+    title: qsTr("Time Zone")
+
+    SystemPalette { id: palette }
 
     onWidthChanged: control.reset()
     onHeightChanged: control.reset()
@@ -53,39 +42,34 @@ FishUI.Window {
         target: timeZoneMap
 
         function onAvailableListChanged() {
-            popupText.text = timeZoneMap.availableList[0]
             popupText.text = timeZoneMap.localeTimeZoneName(timeZoneMap.availableList[0])
             popupItem.visible = true
         }
     }
 
-    FishUI.WindowBlur {
-        view: control
-        geometry: Qt.rect(control.x, control.y, control.width, control.height)
-        windowRadius: control.background.radius
-        enabled: true
-    }
-
+    // 拖动支持
     Item {
         z: -1
         anchors.fill: parent
 
         DragHandler {
-            acceptedDevices: PointerDevice.GenericPointer
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
             grabPermissions: PointerHandler.CanTakeOverFromItems | PointerHandler.CanTakeOverFromHandlersOfDifferentType | PointerHandler.ApprovesTakeOverByAnything
-            onActiveChanged: if (active) control.helper.startSystemMove(control)
+            onActiveChanged: if (active) control.startSystemMove()
         }
     }
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: FishUI.Units.largeSpacing
+        anchors.margins: 12
 
         Image {
             id: _worldMap
             Layout.fillWidth: true
             Layout.fillHeight: true
-            source: FishUI.Theme.darkMode ? "qrc:/images/dark/world.svg" : "qrc:/images/light/world.svg"
+            source: palette.window.hslLightness < 0.5
+                    ? "qrc:/images/dark/world.svg"
+                    : "qrc:/images/light/world.svg"
             sourceSize: Qt.size(width, height)
             fillMode: Image.PreserveAspectFit
 
@@ -94,13 +78,13 @@ FishUI.Window {
                 width: 20
                 height: 20
                 radius: height / 2
-                color: FishUI.Theme.highlightColor
+                color: palette.highlight
                 z: 99
                 visible: false
                 border.width: 5
-                border.color: Qt.rgba(FishUI.Theme.highlightColor.r,
-                                      FishUI.Theme.highlightColor.g,
-                                      FishUI.Theme.highlightColor.b, 0.5)
+                border.color: Qt.rgba(palette.highlight.r,
+                                      palette.highlight.g,
+                                      palette.highlight.b, 0.5)
 
                 function show(x, y) {
                     dot.x = x - dot.width / 2
@@ -112,32 +96,33 @@ FishUI.Window {
             Item {
                 id: popupItem
                 visible: popupText.text !== ""
-                width: popupText.implicitWidth + FishUI.Units.largeSpacing
-                height: popupText.implicitHeight + FishUI.Units.largeSpacing
+                width: popupText.implicitWidth + 12
+                height: popupText.implicitHeight + 12
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: FishUI.Theme.smallRadius
-                    color: FishUI.Theme.highlightColor
+                    radius: 4
+                    color: palette.highlight
                 }
 
                 Label {
                     id: popupText
                     anchors.centerIn: parent
-                    text: timeZoneMap.availableList[0] ? timeZoneMap.availableList[0] : ""
-                    color: FishUI.Theme.highlightedTextColor
+                    text: (timeZoneMap.availableList && timeZoneMap.availableList[0])
+                          ? timeZoneMap.availableList[0] : ""
+                    color: palette.highlightedText
                 }
             }
 
             MouseArea {
                 anchors.fill: parent
 
-                onClicked: {
+                onClicked: (mouse) => {
                     timeZoneMap.clicked(mouse.x, mouse.y, _worldMap.width, _worldMap.height)
                     dot.show(mouse.x, mouse.y)
 
-                    popupItem.x = mouse.x + FishUI.Units.smallSpacing * 1.5
-                    popupItem.y = mouse.y + FishUI.Units.smallSpacing * 1.5
+                    popupItem.x = mouse.x + 6
+                    popupItem.y = mouse.y + 6
 
                     if (popupItem.x + popupItem.width >= _worldMap.width)
                         popupItem.x = _worldMap.width - popupItem.width - 2
@@ -151,7 +136,7 @@ FishUI.Window {
         }
 
         RowLayout {
-            spacing: FishUI.Units.largeSpacing
+            spacing: 12
 
             Item {
                 Layout.fillWidth: true
@@ -164,8 +149,8 @@ FishUI.Window {
 
             Button {
                 text: qsTr("Set")
-                flat: true
-                enabled: popupText.text
+                highlighted: true
+                enabled: popupText.text !== ""
                 onClicked: {
                     timeZoneMap.setTimeZone(timeZoneMap.availableList[0])
                     control.close()

@@ -1,26 +1,6 @@
-/*
- * Copyright (C) 2021 CutefishOS Team.
- *
- * Author:     revenmartin <revenmartin@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-import QtQuick 2.4
-import QtQuick.Controls 2.4
-import QtQuick.Layouts 1.3
-import FishUI 1.0 as FishUI
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Cutefish.Settings 1.0
 import "../"
 
@@ -47,13 +27,11 @@ ItemPage {
         duration: 500
     }
 
+    SystemPalette { id: palette }
+
     Battery {
         id: battery
-
-        Component.onCompleted: {
-            // battery.refresh()
-            batteryBackground.value = battery.chargePercent
-        }
+        onChargePercentChanged: batteryBackground.value = battery.chargePercent
     }
 
     BatteryHistoryModel {
@@ -61,14 +39,6 @@ ItemPage {
         duration: timespanComboDurations[3]
         device: battery.udi
         type: BatteryHistoryModel.ChargeType
-    }
-
-    Connections {
-        target: battery
-
-        function onChargePercentChanged(value) {
-            batteryBackground.value = battery.chargePercent
-        }
     }
 
     Scrollable {
@@ -79,43 +49,37 @@ ItemPage {
         ColumnLayout {
             id: layout
             anchors.fill: parent
-            spacing: FishUI.Units.largeSpacing * 2
+            spacing: 24
 
-            // Battery Info
             BatteryItem {
                 id: batteryBackground
                 Layout.fillWidth: true
                 enableAnimation: !battery.onBattery
                 height: 150
+                value: battery.chargePercent
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: batteryBackground.radius + FishUI.Units.smallSpacing
+                    anchors.leftMargin: batteryBackground.radius + 6
 
-                    Item {
-                        Layout.fillHeight: true
-                    }
+                    Item { Layout.fillHeight: true }
 
                     RowLayout {
                         Label {
                             property int value: 0
-
                             id: percentLabel
                             text: value
                             color: "white"
                             font.pointSize: 40
                             font.weight: Font.DemiBold
                         }
-
                         Label {
                             text: "%"
                             color: "white"
                             font.pointSize: 12
                             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                         }
-
                         Image {
-                            id: sensorsVoltage
                             width: 30
                             height: width
                             sourceSize: Qt.size(width, height)
@@ -129,9 +93,7 @@ ItemPage {
                         color: "white"
                     }
 
-                    Item {
-                        Layout.fillHeight: true
-                    }
+                    Item { Layout.fillHeight: true }
                 }
             }
 
@@ -141,13 +103,12 @@ ItemPage {
 
                 Label {
                     text: qsTr("History")
-                    color: FishUI.Theme.disabledTextColor
+                    color: palette.disabled.text
                 }
 
                 HistoryGraph {
                     Layout.fillWidth: true
                     height: 300
-
                     data: history.points
 
                     readonly property real xTicksAtDontCare: 0
@@ -158,26 +119,20 @@ ItemPage {
                     readonly property real xTicksAtTenMinutes: 5
                     readonly property var xTicksAtList: [xTicksAtTenMinutes, xTicksAtHalfHour, xTicksAtHalfHour,
                                                          xTicksAtFullHour, xTicksAtFullSecondHour, xTicksAtTwelveOClock]
-
-                    // Set grid lines distances which directly correspondent to the xTicksAt variables
-                    readonly property var xDivisionWidths: [1000 * 60 * 10, 1000 * 60 * 60 * 12, 1000 * 60 * 60, 1000 * 60 * 30, 1000 * 60 * 60 * 2, 1000 * 60 * 10]
+                    readonly property var xDivisionWidths: [1000*60*10, 1000*60*60*12, 1000*60*60, 1000*60*30, 1000*60*60*2, 1000*60*10]
                     xTicksAt: xTicksAtList[4]
                     xDivisionWidth: xDivisionWidths[xTicksAt]
-
                     xMin: history.firstDataPointTime
                     xMax: history.lastDataPointTime
                     xDuration: history.duration
-
                     yUnits: batteryPage.historyType === BatteryHistoryModel.RateType ? qsTr("W") : "%"
                     yMax: {
                         if (batteryPage.historyType === BatteryHistoryModel.RateType) {
-                            // ceil to nearest 10
                             var max = Math.floor(history.largestValue)
                             max = max - max % 10 + 10
-
-                            return max;
+                            return max
                         } else {
-                            return 100;
+                            return 100
                         }
                     }
                     yStep: batteryPage.historyType === BatteryHistoryModel.RateType ? 10 : 20
@@ -190,27 +145,23 @@ ItemPage {
 
                 Label {
                     text: qsTr("Health")
-                    color: FishUI.Theme.disabledTextColor
+                    color: palette.disabled.text
                 }
 
                 RowLayout {
-                    Layout.topMargin: FishUI.Units.largeSpacing
-                    spacing: FishUI.Units.largeSpacing * 4
+                    Layout.topMargin: 12
+                    spacing: 32
 
-                    // Poor
                     Item {
-                        height: _poorLabel.implicitHeight + 4 + FishUI.Units.smallSpacing
-                        width: _poorLabel.implicitWidth + FishUI.Units.largeSpacing
-
+                        height: _poorLabel.implicitHeight + 4 + 6
+                        width: _poorLabel.implicitWidth + 12
                         Rectangle {
-                            id: _poorRect
                             anchors.fill: parent
                             color: "#FF8738"
-                            radius: FishUI.Theme.mediumRadius
+                            radius: 6
                             opacity: 0.1
                             visible: battery.capacity >= 0 && battery.capacity <= 79
                         }
-
                         Label {
                             id: _poorLabel
                             anchors.centerIn: parent
@@ -219,23 +170,18 @@ ItemPage {
                         }
                     }
 
-                    Item {
-                        Layout.fillWidth: true
-                    }
+                    Item { Layout.fillWidth: true }
 
                     Item {
-                        height: _normalLabel.implicitHeight + 4 + FishUI.Units.smallSpacing
-                        width: _normalLabel.implicitWidth + FishUI.Units.largeSpacing
-
+                        height: _normalLabel.implicitHeight + 4 + 6
+                        width: _normalLabel.implicitWidth + 12
                         Rectangle {
-                            id: _normalRect
                             anchors.fill: parent
                             color: "#3385FF"
-                            radius: FishUI.Theme.mediumRadius
+                            radius: 6
                             opacity: 0.1
                             visible: battery.capacity >= 80 && battery.capacity <= 89
                         }
-
                         Label {
                             id: _normalLabel
                             anchors.centerIn: parent
@@ -244,23 +190,18 @@ ItemPage {
                         }
                     }
 
-                    Item {
-                        Layout.fillWidth: true
-                    }
+                    Item { Layout.fillWidth: true }
 
                     Item {
-                        height: _excellentLabel.implicitHeight + 4 + FishUI.Units.smallSpacing
-                        width: _excellentLabel.implicitWidth + FishUI.Units.largeSpacing
-
+                        height: _excellentLabel.implicitHeight + 4 + 6
+                        width: _excellentLabel.implicitWidth + 12
                         Rectangle {
-                            id: _excellentRect
                             anchors.fill: parent
                             color: "#00CD23"
-                            radius: FishUI.Theme.mediumRadius
+                            radius: 6
                             opacity: 0.1
                             visible: battery.capacity >= 90 && battery.capacity <= 100
                         }
-
                         Label {
                             id: _excellentLabel
                             anchors.centerIn: parent
@@ -289,11 +230,7 @@ ItemPage {
                     Label {
                         text: qsTr("Show percentage in status bar")
                     }
-
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
+                    Item { Layout.fillWidth: true }
                     Switch {
                         Layout.fillHeight: true
                         checked: battery.showPercent
@@ -303,9 +240,7 @@ ItemPage {
                 }
             }
 
-            Item {
-                height: FishUI.Units.largeSpacing
-            }
+            Item { height: 12 }
         }
     }
 

@@ -1,20 +1,6 @@
 /*
    Copyright (c) 2002 Craig Drummond <craig@kde.org>
-
-   This library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Library General Public
-   License as published by the Free Software Foundation; either
-   version 2 of the License, or (at your option) any later version.
-
-   This library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Library General Public License for more details.
-
-   You should have received a copy of the GNU Library General Public License
-   along with this library; see the file COPYING.LIB.  If not, write to
-   the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.
+   LGPL v2 or later
 */
 
 #include "kxftconfig.h"
@@ -33,20 +19,29 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QStandardPaths>
-#include <QX11Info>
+#include <QGuiApplication>
+#include <QScreen>
 
 #include <fontconfig/fontconfig.h>
 
 using namespace std;
 
+static double getAppDpiY()
+{
+    QScreen *screen = QGuiApplication::primaryScreen();
+    if (screen)
+        return screen->logicalDotsPerInchY();
+    return 96.0;
+}
+
 static int point2Pixel(double point)
 {
-    return (int)(((point * QX11Info::appDpiY()) / 72.0) + 0.5);
+    return (int)(((point * getAppDpiY()) / 72.0) + 0.5);
 }
 
 static int pixel2Point(double pixel)
 {
-    return (int)(((pixel * 72.0) / (double)QX11Info::appDpiY()) + 0.5);
+    return (int)(((pixel * 72.0) / getAppDpiY()) + 0.5);
 }
 
 static bool equal(double d1, double d2)
@@ -175,8 +170,6 @@ KXftConfig::~KXftConfig()
 {
 }
 
-//
-// Obtain location of config file to use.
 QString KXftConfig::getConfigFile()
 {
     FcStrList *list = FcConfigGetConfigFiles(FcConfigGetCurrent());
@@ -197,16 +190,14 @@ QString KXftConfig::getConfigFile()
     }
     FcStrListDone(list);
 
-    //
-    // Go through list of localFiles, looking for the preferred one...
     if (!localFiles.isEmpty()) {
         for (const QString &file : qAsConst(localFiles)) {
             if (file.endsWith(QLatin1String("/fonts.conf")) || file.endsWith(QLatin1String("/.fonts.conf"))) {
                 return file;
             }
         }
-        return localFiles.front(); // Just return the 1st one...
-    } else { // Hmmm... no known localFiles?
+        return localFiles.front();
+    } else {
         if (FcGetVersion() >= 21000) {
             const QString targetPath(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QLatin1Char('/') + QLatin1String("fontconfig"));
             QDir target(targetPath);
@@ -262,33 +253,27 @@ bool KXftConfig::reset()
 
     ok |= parseConfigFile(m_file);
 
-    if (m_antiAliasing.node.isNull()) {
+    if (m_antiAliasing.node.isNull())
         m_antiAliasing = globalAntialiasing;
-    } else {
+    else
         m_antiAliasingHasLocalConfig = true;
-    }
 
-    if (m_subPixel.node.isNull()) {
+    if (m_subPixel.node.isNull())
         m_subPixel = globalSubPixel;
-    } else {
+    else
         m_subPixelHasLocalConfig = true;
-    }
 
-    if (m_hint.node.isNull()) {
+    if (m_hint.node.isNull())
         m_hint = globalHint;
-    } else {
+    else
         m_hintHasLocalConfig = true;
-    }
 
-    if (m_hinting.node.isNull()) {
+    if (m_hinting.node.isNull())
         m_hinting = globalHinting;
-    }
-    if (m_excludeRange.node.isNull()) {
+    if (m_excludeRange.node.isNull())
         m_excludeRange = globalExcludeRange;
-    }
-    if (m_excludePixelRange.node.isNull()) {
+    if (m_excludePixelRange.node.isNull())
         m_excludePixelRange = globalExcludePixelRange;
-    }
 
     return ok;
 }
@@ -298,25 +283,18 @@ bool KXftConfig::apply()
     bool ok = true;
 
     if (m_madeChanges) {
-        //
-        // Check if file has been written since we last read it. If it has, then re-read and add any
-        // of our changes...
         if (fExists(m_file) && getTimeStamp(m_file) != m_time) {
             KXftConfig newConfig;
-
             newConfig.setExcludeRange(m_excludeRange.from, m_excludeRange.to);
             newConfig.setSubPixelType(m_subPixel.type);
             newConfig.setHintStyle(m_hint.style);
             newConfig.setAntiAliasing(m_antiAliasing.state);
-
             ok = newConfig.changed() ? newConfig.apply() : true;
-            if (ok) {
+            if (ok)
                 reset();
-            } else {
+            else
                 m_time = getTimeStamp(m_file);
-            }
         } else {
-            // Ensure these are always equal...
             m_excludePixelRange.from = (int)point2Pixel(m_excludeRange.from);
             m_excludePixelRange.to = (int)point2Pixel(m_excludeRange.to);
 
@@ -334,8 +312,6 @@ bool KXftConfig::apply()
                         applyExcludeRange(false);
                         applyExcludeRange(true);
 
-                        //
-                        // Check document syntax...
                         static const char qtXmlHeader[] = "<?xml version = '1.0'?>";
                         static const char xmlHeader[] = "<?xml version=\"1.0\"?>";
                         static const char qtDocTypeLine[] = "<!DOCTYPE fontconfig>";
@@ -356,14 +332,12 @@ bool KXftConfig::apply()
                             str.replace(idx, strlen(qtDocTypeLine), docTypeLine);
                         }
 
-                        //
-                        // Write to file...
                         fputs(str.toUtf8(), f);
                         fclose(f);
 
                         if (FcAtomicReplaceOrig(atomic)) {
                             ok = true;
-                            reset(); // Re-read contents..
+                            reset();
                         } else {
                             FcAtomicDeleteNew(atomic);
                         }
@@ -378,10 +352,7 @@ bool KXftConfig::apply()
     return ok;
 }
 
-bool KXftConfig::subPixelTypeHasLocalConfig() const
-{
-    return m_subPixelHasLocalConfig;
-}
+bool KXftConfig::subPixelTypeHasLocalConfig() const { return m_subPixelHasLocalConfig; }
 
 bool KXftConfig::getSubPixelType(SubPixel::Type &type)
 {
@@ -397,19 +368,15 @@ void KXftConfig::setSubPixelType(SubPixel::Type type)
     }
 }
 
-bool KXftConfig::hintStyleHasLocalConfig() const
-{
-    return m_hintHasLocalConfig;
-}
+bool KXftConfig::hintStyleHasLocalConfig() const { return m_hintHasLocalConfig; }
 
 bool KXftConfig::getHintStyle(Hint::Style &style)
 {
     if (Hint::NotSet != m_hint.style && !m_hint.toBeRemoved) {
         style = m_hint.style;
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 void KXftConfig::setHintStyle(Hint::Style style)
@@ -420,7 +387,6 @@ void KXftConfig::setHintStyle(Hint::Style style)
         m_hint.style = style;
         m_madeChanges = true;
     }
-
     if (Hint::NotSet != style) {
         setHinting(Hint::None != m_hint.style);
     }
@@ -440,15 +406,13 @@ bool KXftConfig::getExcludeRange(double &from, double &to)
         from = m_excludeRange.from;
         to = m_excludeRange.to;
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 void KXftConfig::setExcludeRange(double from, double to)
 {
     double f = from < to ? from : to, t = from < to ? to : from;
-
     if (!equal(f, m_excludeRange.from) || !equal(t, m_excludeRange.to)) {
         m_excludeRange.from = f;
         m_excludeRange.to = t;
@@ -456,42 +420,18 @@ void KXftConfig::setExcludeRange(double from, double to)
     }
 }
 
-QString KXftConfig::description(SubPixel::Type t)
-{
-    return QString();
-//    switch (t) {
-//    default:
-//    case SubPixel::NotSet:
-//        return QObject::tr("use system subpixel setting", "Vendor default");
-//    case SubPixel::None:
-//        return QObject::tr("no subpixel rendering", "None");
-//    case SubPixel::Rgb:
-//        return QObject::tr("RGB");
-//    case SubPixel::Bgr:
-//        return QObject::tr("BGR");
-//    case SubPixel::Vrgb:
-//        return QObject::tr("Vertical RGB");
-//    case SubPixel::Vbgr:
-//        return QObject::tr("Vertical BGR");
-//    }
-}
+QString KXftConfig::description(SubPixel::Type t) { return QString(); }
 
 const char *KXftConfig::toStr(SubPixel::Type t)
 {
     switch (t) {
     default:
-    case SubPixel::NotSet:
-        return "";
-    case SubPixel::None:
-        return "none";
-    case SubPixel::Rgb:
-        return "rgb";
-    case SubPixel::Bgr:
-        return "bgr";
-    case SubPixel::Vrgb:
-        return "vrgb";
-    case SubPixel::Vbgr:
-        return "vbgr";
+    case SubPixel::NotSet: return "";
+    case SubPixel::None:   return "none";
+    case SubPixel::Rgb:    return "rgb";
+    case SubPixel::Bgr:    return "bgr";
+    case SubPixel::Vrgb:   return "vrgb";
+    case SubPixel::Vbgr:   return "vbgr";
     }
 }
 
@@ -499,16 +439,11 @@ QString KXftConfig::description(Hint::Style s)
 {
     switch (s) {
     default:
-    case Hint::NotSet:
-        return QObject::tr("Vendor default");
-    case Hint::Medium:
-        return QObject::tr("Medium");
-    case Hint::None:
-        return QObject::tr("None");
-    case Hint::Slight:
-        return QObject::tr("Slight");
-    case Hint::Full:
-        return QObject::tr("Full");
+    case Hint::NotSet:  return QObject::tr("Vendor default");
+    case Hint::Medium:  return QObject::tr("Medium");
+    case Hint::None:    return QObject::tr("None");
+    case Hint::Slight:  return QObject::tr("Slight");
+    case Hint::Full:    return QObject::tr("Full");
     }
 }
 
@@ -516,71 +451,51 @@ const char *KXftConfig::toStr(Hint::Style s)
 {
     switch (s) {
     default:
-    case Hint::NotSet:
-        return "";
-    case Hint::Medium:
-        return "hintmedium";
-    case Hint::None:
-        return "hintnone";
-    case Hint::Slight:
-        return "hintslight";
-    case Hint::Full:
-        return "hintfull";
+    case Hint::NotSet:  return "";
+    case Hint::Medium:  return "hintmedium";
+    case Hint::None:    return "hintnone";
+    case Hint::Slight:  return "hintslight";
+    case Hint::Full:    return "hintfull";
     }
 }
 
 KXftConfig::Hint::Style KXftConfig::toHintStyle(const QString &str)
 {
-    if (str == "hintmedium") {
-        return Hint::Medium;
-    } else if (str == "hintnone") {
-        return Hint::None;
-    } else if (str == "hintslight") {
-        return Hint::Slight;
-    } else if (str == "hintfull") {
-        return Hint::Full;
-    }
-
+    if (str == "hintmedium")  return Hint::Medium;
+    if (str == "hintnone")    return Hint::None;
+    if (str == "hintslight")  return Hint::Slight;
+    if (str == "hintfull")    return Hint::Full;
     return Hint::NotSet;
 }
 
 bool KXftConfig::parseConfigFile(const QString &filename)
 {
     bool ok = false;
-
     QFile f(filename);
 
     if (f.open(QIODevice::ReadOnly)) {
         m_time = getTimeStamp(filename);
         ok = true;
         m_doc.clear();
-
-        if (m_doc.setContent(&f)) {
+        if (m_doc.setContent(&f))
             readContents();
-        }
         f.close();
     } else {
         ok = !fExists(filename) && dWritable(getDir(filename));
     }
 
-    if (m_doc.documentElement().isNull()) {
+    if (m_doc.documentElement().isNull())
         m_doc.appendChild(m_doc.createElement("fontconfig"));
-    }
 
     if (ok) {
-        //
-        // Check exclude range values - i.e. size and pixel size...
-        // If "size" range is set, ensure "pixelsize" matches...
         if (!equal(0, m_excludeRange.from) || !equal(0, m_excludeRange.to)) {
             double pFrom = (double)point2Pixel(m_excludeRange.from), pTo = (double)point2Pixel(m_excludeRange.to);
-
             if (!equal(pFrom, m_excludePixelRange.from) || !equal(pTo, m_excludePixelRange.to)) {
                 m_excludePixelRange.from = pFrom;
                 m_excludePixelRange.to = pTo;
                 m_madeChanges = true;
             }
         } else if (!equal(0, m_excludePixelRange.from) || !equal(0, m_excludePixelRange.to)) {
-            // "pixelsize" set, but not "size" !!!
             m_excludeRange.from = (int)pixel2Point(m_excludePixelRange.from);
             m_excludeRange.to = (int)pixel2Point(m_excludePixelRange.to);
             m_madeChanges = true;
@@ -600,13 +515,10 @@ void KXftConfig::readContents()
         if (!e.isNull()) {
             if ("match" == e.tagName()) {
                 QString str;
-
                 int childNodesCount = e.childNodes().count();
                 QDomNode en = e.firstChild();
                 while (!en.isNull()) {
-                    if (en.isComment()) {
-                        childNodesCount--;
-                    }
+                    if (en.isComment()) childNodesCount--;
                     en = en.nextSibling();
                 }
 
@@ -616,10 +528,7 @@ void KXftConfig::readContents()
                         QDomNode en = e.firstChild();
                         while (!en.isNull()) {
                             QDomElement ene = en.toElement();
-
-                            while (ene.isComment()) {
-                                ene = ene.nextSiblingElement();
-                            }
+                            while (ene.isComment()) ene = ene.nextSiblingElement();
 
                             if (!ene.isNull() && "edit" == ene.tagName()) {
                                 if (!(str = getEntry(ene, "const", 2, "name", "rgba", "mode", "assign")).isNull()
@@ -627,16 +536,14 @@ void KXftConfig::readContents()
                                     m_subPixel.node = n;
                                     m_subPixel.type = strToType(str.toLatin1());
                                 } else if (!(str = getEntry(ene, "const", 2, "name", "hintstyle", "mode", "assign")).isNull()
-                                           || (m_hint.style == Hint::NotSet
-                                               && !(str = getEntry(ene, "const", 2, "name", "hintstyle", "mode", "append")).isNull())) {
+                                           || (m_hint.style == Hint::NotSet && !(str = getEntry(ene, "const", 2, "name", "hintstyle", "mode", "append")).isNull())) {
                                     m_hint.node = n;
                                     m_hint.style = strToStyle(str.toLatin1());
                                 } else if (!(str = getEntry(ene, "bool", 2, "name", "hinting", "mode", "assign")).isNull()) {
                                     m_hinting.node = n;
                                     m_hinting.set = str.toLower() != "false";
                                 } else if (!(str = getEntry(ene, "bool", 2, "name", "antialias", "mode", "assign")).isNull()
-                                           || (m_antiAliasing.state == AntiAliasing::NotSet
-                                               && !(str = getEntry(ene, "bool", 2, "name", "antialias", "mode", "append")).isNull())) {
+                                           || (m_antiAliasing.state == AntiAliasing::NotSet && !(str = getEntry(ene, "bool", 2, "name", "antialias", "mode", "append")).isNull())) {
                                     m_antiAliasing.node = n;
                                     m_antiAliasing.state = str.toLower() != "false" ? AntiAliasing::Enabled : AntiAliasing::Disabled;
                                 }
@@ -645,62 +552,39 @@ void KXftConfig::readContents()
                         }
                     }
                     break;
-                case 3: // CPD: Is target "font" or "pattern" ????
+                case 3:
                     if ("font" == e.attribute("target")) {
                         bool foundFalse = false;
                         QDomNode en = e.firstChild();
-                        while (en.isComment()) {
-                            en = en.nextSibling();
-                        }
+                        while (en.isComment()) en = en.nextSibling();
                         double from = -1.0, to = -1.0, pixelFrom = -1.0, pixelTo = -1.0;
 
                         while (!en.isNull()) {
                             QDomElement ene = en.toElement();
-
                             if (!ene.isNull()) {
                                 if ("test" == ene.tagName()) {
-                                    // kcmfonts used to write incorrectly more or less instead of
-                                    // more_eq and less_eq, so read both,
-                                    // first the old (wrong) one then the right one
-                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "size", "compare", "more")).isNull()) {
-                                        from = str.toDouble();
-                                    }
-                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "size", "compare", "more_eq")).isNull()) {
-                                        from = str.toDouble();
-                                    }
-                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "size", "compare", "less")).isNull()) {
-                                        to = str.toDouble();
-                                    }
-                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "size", "compare", "less_eq")).isNull()) {
-                                        to = str.toDouble();
-                                    }
-                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "pixelsize", "compare", "more")).isNull()) {
-                                        pixelFrom = str.toDouble();
-                                    }
-                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "pixelsize", "compare", "more_eq")).isNull()) {
-                                        pixelFrom = str.toDouble();
-                                    }
-                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "pixelsize", "compare", "less")).isNull()) {
-                                        pixelTo = str.toDouble();
-                                    }
-                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "pixelsize", "compare", "less_eq")).isNull()) {
-                                        pixelTo = str.toDouble();
-                                    }
+                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "size", "compare", "more")).isNull())       from = str.toDouble();
+                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "size", "compare", "more_eq")).isNull())    from = str.toDouble();
+                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "size", "compare", "less")).isNull())       to   = str.toDouble();
+                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "size", "compare", "less_eq")).isNull())    to   = str.toDouble();
+                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "pixelsize", "compare", "more")).isNull())  pixelFrom = str.toDouble();
+                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "pixelsize", "compare", "more_eq")).isNull()) pixelFrom = str.toDouble();
+                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "pixelsize", "compare", "less")).isNull())  pixelTo   = str.toDouble();
+                                    if (!(str = getEntry(ene, "double", 3, "qual", "any", "name", "pixelsize", "compare", "less_eq")).isNull()) pixelTo  = str.toDouble();
                                 } else if ("edit" == ene.tagName() && "false" == getEntry(ene, "bool", 2, "name", "antialias", "mode", "assign")) {
                                     foundFalse = true;
                                 }
                             }
-
                             en = en.nextSibling();
                         }
 
                         if ((from >= 0 || to >= 0) && foundFalse) {
                             m_excludeRange.from = from < to ? from : to;
-                            m_excludeRange.to = from < to ? to : from;
+                            m_excludeRange.to   = from < to ? to   : from;
                             m_excludeRange.node = n;
                         } else if ((pixelFrom >= 0 || pixelTo >= 0) && foundFalse) {
                             m_excludePixelRange.from = pixelFrom < pixelTo ? pixelFrom : pixelTo;
-                            m_excludePixelRange.to = pixelFrom < pixelTo ? pixelTo : pixelFrom;
+                            m_excludePixelRange.to   = pixelFrom < pixelTo ? pixelTo   : pixelFrom;
                             m_excludePixelRange.node = n;
                         }
                     }
@@ -723,21 +607,19 @@ void KXftConfig::applySubPixelType()
         }
     } else {
         QDomElement matchNode = m_doc.createElement("match");
-        QDomElement typeNode = m_doc.createElement("const");
-        QDomElement editNode = m_doc.createElement("edit");
+        QDomElement typeNode  = m_doc.createElement("const");
+        QDomElement editNode  = m_doc.createElement("edit");
         QDomText typeText = m_doc.createTextNode(toStr(m_subPixel.type));
-
         matchNode.setAttribute("target", "font");
         editNode.setAttribute("mode", "assign");
         editNode.setAttribute("name", "rgba");
         editNode.appendChild(typeNode);
         typeNode.appendChild(typeText);
         matchNode.appendChild(editNode);
-        if (m_subPixel.node.isNull()) {
+        if (m_subPixel.node.isNull())
             m_doc.documentElement().appendChild(matchNode);
-        } else {
+        else
             m_doc.documentElement().replaceChild(matchNode, m_subPixel.node);
-        }
         m_subPixel.node = matchNode;
     }
 }
@@ -756,40 +638,40 @@ void KXftConfig::applyHintStyle()
             m_hinting.node.clear();
         }
     } else {
-        QDomElement matchNode = m_doc.createElement("match"), typeNode = m_doc.createElement("const"), editNode = m_doc.createElement("edit");
+        QDomElement matchNode = m_doc.createElement("match");
+        QDomElement typeNode  = m_doc.createElement("const");
+        QDomElement editNode  = m_doc.createElement("edit");
         QDomText typeText = m_doc.createTextNode(toStr(m_hint.style));
-
         matchNode.setAttribute("target", "font");
         editNode.setAttribute("mode", "assign");
         editNode.setAttribute("name", "hintstyle");
         editNode.appendChild(typeNode);
         typeNode.appendChild(typeText);
         matchNode.appendChild(editNode);
-        if (m_hint.node.isNull()) {
+        if (m_hint.node.isNull())
             m_doc.documentElement().appendChild(matchNode);
-        } else {
+        else
             m_doc.documentElement().replaceChild(matchNode, m_hint.node);
-        }
         m_hint.node = matchNode;
     }
 }
 
 void KXftConfig::applyHinting()
 {
-    QDomElement matchNode = m_doc.createElement("match"), typeNode = m_doc.createElement("bool"), editNode = m_doc.createElement("edit");
+    QDomElement matchNode = m_doc.createElement("match");
+    QDomElement typeNode  = m_doc.createElement("bool");
+    QDomElement editNode  = m_doc.createElement("edit");
     QDomText typeText = m_doc.createTextNode(m_hinting.set ? "true" : "false");
-
     matchNode.setAttribute("target", "font");
     editNode.setAttribute("mode", "assign");
     editNode.setAttribute("name", "hinting");
     editNode.appendChild(typeNode);
     typeNode.appendChild(typeText);
     matchNode.appendChild(editNode);
-    if (m_hinting.node.isNull()) {
+    if (m_hinting.node.isNull())
         m_doc.documentElement().appendChild(matchNode);
-    } else {
+    else
         m_doc.documentElement().replaceChild(matchNode, m_hinting.node);
-    }
     m_hinting.node = matchNode;
 }
 
@@ -804,16 +686,21 @@ void KXftConfig::applyExcludeRange(bool pixel)
         }
     } else {
         QString fromString, toString;
-
         fromString.setNum(range.from);
         toString.setNum(range.to);
 
-        QDomElement matchNode = m_doc.createElement("match"), fromTestNode = m_doc.createElement("test"), fromNode = m_doc.createElement("double"),
-                    toTestNode = m_doc.createElement("test"), toNode = m_doc.createElement("double"), editNode = m_doc.createElement("edit"),
-                    boolNode = m_doc.createElement("bool");
-        QDomText fromText = m_doc.createTextNode(fromString), toText = m_doc.createTextNode(toString), boolText = m_doc.createTextNode("false");
+        QDomElement matchNode    = m_doc.createElement("match");
+        QDomElement fromTestNode = m_doc.createElement("test");
+        QDomElement fromNode     = m_doc.createElement("double");
+        QDomElement toTestNode   = m_doc.createElement("test");
+        QDomElement toNode       = m_doc.createElement("double");
+        QDomElement editNode     = m_doc.createElement("edit");
+        QDomElement boolNode     = m_doc.createElement("bool");
+        QDomText fromText  = m_doc.createTextNode(fromString);
+        QDomText toText    = m_doc.createTextNode(toString);
+        QDomText boolText  = m_doc.createTextNode("false");
 
-        matchNode.setAttribute("target", "font"); // CPD: Is target "font" or "pattern" ????
+        matchNode.setAttribute("target", "font");
         fromTestNode.setAttribute("qual", "any");
         fromTestNode.setAttribute("name", pixel ? "pixelsize" : "size");
         fromTestNode.setAttribute("compare", "more_eq");
@@ -832,27 +719,18 @@ void KXftConfig::applyExcludeRange(bool pixel)
         matchNode.appendChild(toTestNode);
         matchNode.appendChild(editNode);
 
-        if (!m_antiAliasing.node.isNull()) {
+        if (!m_antiAliasing.node.isNull())
             m_doc.documentElement().removeChild(range.node);
-        }
-        if (range.node.isNull()) {
+        if (range.node.isNull())
             m_doc.documentElement().appendChild(matchNode);
-        } else {
+        else
             m_doc.documentElement().replaceChild(matchNode, range.node);
-        }
         range.node = matchNode;
     }
 }
 
-bool KXftConfig::antiAliasingHasLocalConfig() const
-{
-    return m_antiAliasingHasLocalConfig;
-}
-
-KXftConfig::AntiAliasing::State KXftConfig::getAntiAliasing() const
-{
-    return m_antiAliasing.state;
-}
+bool KXftConfig::antiAliasingHasLocalConfig() const { return m_antiAliasingHasLocalConfig; }
+KXftConfig::AntiAliasing::State KXftConfig::getAntiAliasing() const { return m_antiAliasing.state; }
 
 void KXftConfig::setAntiAliasing(AntiAliasing::State state)
 {
@@ -871,28 +749,22 @@ void KXftConfig::applyAntiAliasing()
         }
     } else {
         QDomElement matchNode = m_doc.createElement("match");
-        QDomElement typeNode = m_doc.createElement("bool");
-        QDomElement editNode = m_doc.createElement("edit");
+        QDomElement typeNode  = m_doc.createElement("bool");
+        QDomElement editNode  = m_doc.createElement("edit");
         QDomText typeText = m_doc.createTextNode(m_antiAliasing.state == AntiAliasing::Enabled ? "true" : "false");
-
         matchNode.setAttribute("target", "font");
         editNode.setAttribute("mode", "assign");
         editNode.setAttribute("name", "antialias");
         editNode.appendChild(typeNode);
         typeNode.appendChild(typeText);
         matchNode.appendChild(editNode);
-        if (!m_antiAliasing.node.isNull()) {
+        if (!m_antiAliasing.node.isNull())
             m_doc.documentElement().removeChild(m_antiAliasing.node);
-        }
         m_doc.documentElement().appendChild(matchNode);
         m_antiAliasing.node = matchNode;
     }
 }
 
-// KXftConfig only parses one config file, user's .fonts.conf usually.
-// If that one doesn't exist, then KXftConfig doesn't know if antialiasing
-// is enabled or not. So try to find out the default value from the default font.
-// Maybe there's a better way *shrug*.
 bool KXftConfig::aliasingEnabled()
 {
     FcPattern *pattern = FcPatternCreate();

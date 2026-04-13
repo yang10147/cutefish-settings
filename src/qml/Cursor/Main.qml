@@ -17,14 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
-import QtGraphicalEffects 1.0
-
-import FishUI 1.0 as FishUI
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Cutefish.Settings 1.0
-import Cutefish.Accounts 1.0
 import "../"
 
 ItemPage {
@@ -49,13 +45,13 @@ ItemPage {
         ColumnLayout {
             id: layout
             anchors.fill: parent
-            spacing: FishUI.Units.largeSpacing * 2
+            spacing: Theme.largeSpacing * 2
 
             RoundedItem {
                 GridLayout {
                     columns: 2
-                    columnSpacing: FishUI.Units.largeSpacing * 1.5
-                    rowSpacing: FishUI.Units.largeSpacing * 2
+                    columnSpacing: Theme.largeSpacing * 1.5
+                    rowSpacing: Theme.largeSpacing * 2
 
                     Label {
                         text: qsTr("Left hand")
@@ -81,34 +77,12 @@ ItemPage {
                         onCheckedChanged: mouse.naturalScroll = checked
                         rightPadding: 0
                     }
-
-//                    Label {
-//                        text: qsTr("Mouse acceleration")
-//                    }
-
-//                    Switch {
-//                        Layout.fillHeight: true
-//                        Layout.alignment: Qt.AlignRight
-//                        checked: mouse.acceleration
-//                        onCheckableChanged: mouse.acceleration = checked
-//                        rightPadding: 0
-//                    }
-
-//                    Label {
-//                        text: qsTr("Disable touchpad when mouse is connected")
-//                    }
-
-//                    Switch {
-//                        Layout.fillHeight: true
-//                        Layout.alignment: Qt.AlignRight
-//                        rightPadding: 0
-//                    }
                 }
 
                 HorizontalDivider {}
 
                 RowLayout {
-                    spacing: FishUI.Units.largeSpacing * 2
+                    spacing: Theme.largeSpacing * 2
 
                     Label {
                         text: qsTr("Pointer speed")
@@ -117,16 +91,18 @@ ItemPage {
                     Slider {
                         id: accelerationSlider
                         Layout.fillWidth: true
-                        rightPadding: FishUI.Units.largeSpacing
+                        rightPadding: Theme.largeSpacing
                         from: 1
                         to: 11
                         stepSize: 1
+
+                        value: 6 + mouse.pointerAcceleration / 0.2
 
                         function init() {
                             accelerationSlider.value = 6 + mouse.pointerAcceleration / 0.2
                         }
 
-                        Component.onCompleted: init()
+                        
 
                         onPressedChanged: {
                             mouse.pointerAcceleration = Math.round(((value - 6) * 0.2) * 10) / 10
@@ -138,14 +114,14 @@ ItemPage {
             RoundedItem {
                 Label {
                     text: qsTr("Theme")
-                    color: FishUI.Theme.disabledTextColor
+                    color: Theme.disabledTextColor
                     visible: _view.count > 0
                 }
 
                 GridView {
                     id: _view
                     Layout.fillWidth: true
-                    implicitHeight: Math.ceil(_view.count / rowCount) * cellHeight + FishUI.Units.largeSpacing
+                    implicitHeight: Math.ceil(_view.count / rowCount) * cellHeight + Theme.largeSpacing
                     model: cursorModel
                     interactive: false
                     visible: _view.count > 0
@@ -190,7 +166,7 @@ ItemPage {
                         MouseArea {
                             id: _mouseArea
                             anchors.fill: parent
-                            anchors.margins: FishUI.Units.smallSpacing * 1.5
+                            anchors.margins: Theme.smallSpacing * 1.5
                             onClicked: {
                                 _view.currentIndex = index
                                 cursorModel.currentTheme = model.id
@@ -200,33 +176,35 @@ ItemPage {
 
                         Rectangle {
                             anchors.fill: parent
-                            anchors.margins: FishUI.Units.smallSpacing * 1.5
-                            color: FishUI.Theme.darkMode ? "#3C3C3C" : "#FAFAFA"
-                            radius: FishUI.Theme.mediumRadius
+                            anchors.margins: Theme.smallSpacing * 1.5
+                            color: Theme.darkMode ? "#3C3C3C" : "#FAFAFA"
+                            radius: Theme.mediumRadius
                             z: -1
 
                             border.width: isCurrent ? 3 : 0
-                            border.color: FishUI.Theme.highlightColor
+                            border.color: Theme.highlightColor
                         }
 
                         ColumnLayout {
                             anchors.fill: parent
-                            anchors.margins: FishUI.Units.smallSpacing * 1.5
+                            anchors.margins: Theme.smallSpacing * 1.5
 
                             Item {
                                 Layout.fillHeight: true
                             }
 
                             Item {
-                                height: FishUI.Units.largeSpacing
+                                height: Theme.largeSpacing
                             }
 
-                            FishUI.IconItem {
-                                width: 22
-                                height: 22
-                                source: model.image
+                            Image {
+                                width: 48
+                                height: 48
+                                source: "qrc:/images/sidebar/dark/cursor.svg"
                                 smooth: true
+                                fillMode: Image.PreserveAspectFit
                                 Layout.alignment: Qt.AlignHCenter
+                                opacity: Theme.darkMode ? 1.0 : 0.6
                             }
 
                             Item {
@@ -236,7 +214,7 @@ ItemPage {
                             Label {
                                 text: model.name
                                 Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                                bottomPadding: FishUI.Units.largeSpacing
+                                bottomPadding: Theme.largeSpacing
                             }
 
                             Item {
@@ -248,7 +226,7 @@ ItemPage {
             }
 
             Item {
-                height: FishUI.Units.smallSpacing
+                height: Theme.smallSpacing
             }
         }
     }
