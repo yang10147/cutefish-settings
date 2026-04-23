@@ -1,20 +1,6 @@
 /*
  * Copyright (C) 2021 CutefishOS Team.
- *
- * Author:     revenmartin <revenmartin@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Author: revenmartin <revenmartin@gmail.com>
  */
 
 import QtQuick
@@ -42,263 +28,174 @@ RoundedItem {
         id: fileDialog
         nameFilters: ["Image files (*.jpg *.png)", "All files (*)"]
         onAccepted: {
-            currentUser.iconFileName = fileDialog.selectedFile.toString().replace("file://", "")
-            _userImage.source = fileDialog.selectedFile
-            _userImage.update()
+            let path = fileDialog.selectedFile.toString().replace("file://", "").replace("localhost", "");
+            currentUser.iconFileName = path;
+            _userImage.source = fileDialog.selectedFile;
         }
     }
 
     ColumnLayout {
         id: mainLayout
+        anchors.fill: parent
+        anchors.margins: Theme.largeSpacing
         spacing: 0
 
         RowLayout {
-            id: _itemLayout
-            spacing: 0
+            id: _topLayout
+            Layout.fillWidth: true
+            spacing: Theme.largeSpacing
 
-            Item {
-                id: _topItem
-
-                Layout.fillWidth: true
-                height: _topLayout.implicitHeight + Theme.largeSpacing
-
+            Image {
+                id: _userImage
+                property int iconSize: 48
+                Layout.preferredWidth: iconSize
+                Layout.preferredHeight: iconSize
+                sourceSize: Qt.size(iconSize, iconSize)
+                source: iconFileName ? (iconFileName.startsWith("/") ? "file://" + iconFileName : "file:///" + iconFileName) : "image://icontheme/default-user"
+                
                 MouseArea {
                     anchors.fill: parent
-                    onDoubleClicked: additionalSettings.toggle()
+                    onClicked: fileDialog.open()
+                    cursorShape: Qt.PointingHandCursor
                 }
 
-                RowLayout {
-                    id: _topLayout
-                    anchors.fill: parent
-                    anchors.topMargin: Theme.smallSpacing
-                    anchors.bottomMargin: Theme.smallSpacing
-                    spacing: 0
-
-                    Image {
-                        id: _userImage
-
-                        property int iconSize: 48
-
-                        Layout.preferredWidth: iconSize
-                        Layout.preferredHeight: iconSize
-                        sourceSize: String(source) === "image://icontheme/default-user" ? Qt.size(iconSize, iconSize) : undefined
-                        source: iconFileName ? "file:///" + iconFileName : "image://icontheme/default-user"
-                        visible: status === Image.Ready
-                        Layout.alignment: Qt.AlignVCenter
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: fileDialog.open()
-                            cursorShape: Qt.PointingHandCursor
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    source: _userImage
+                    maskEnabled: true
+                    maskSource: ShaderEffectSource {
+                        sourceItem: Rectangle {
+                            width: _userImage.width
+                            height: _userImage.height
+                            radius: width / 2
+                            visible: false
                         }
-
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            maskEnabled: true
-                            maskThresholdMin: 0.5
-                            maskSpreadAtMin: 1.0
-                            maskSource: ShaderEffectSource {
-                                sourceItem: Rectangle {
-                                    width: _userImage.width
-                                    height: width
-                                    radius: width / 2
-                                }
-                            }
-                        }
-                        }
-                    }
-
-                    Label {
-                        Layout.alignment: Qt.AlignVCenter
-                        font.pixelSize: 15
-                        text: "<b>%1</b>".arg(userName)
-                        leftPadding: Theme.largeSpacing
-                    }
-
-                    Item {
-                        width: Theme.largeSpacing
-                    }
-
-                    Label {
-                        Layout.alignment: Qt.AlignVCenter
-                        text: realName
-                        color: Theme.disabledTextColor
-                        visible: realName !== userName
-                    }
-
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
-                    Label {
-                        text: qsTr("Currently logged")
-                        Layout.alignment: Qt.AlignVCenter
-                        visible: currentUser.userId === loggedUser.userId
-                    }
-
-                    Item {
-                        width: Theme.smallSpacing
-                    }
-
-                    RoundButton {
-                        iconMargins: Theme.smallSpacing
-                        source: Theme.darkMode ? additionalSettings.shown ? "qrc:/images/dark/up.svg" : "qrc:/images/dark/down.svg"
-                                                      : additionalSettings.shown ? "qrc:/images/light/up.svg" : "qrc:/images/light/down.svg"
-                        onClicked: additionalSettings.toggle()
-                        Layout.alignment: Qt.AlignVCenter
                     }
                 }
+            }
+
+            Label {
+                font.pixelSize: 15
+                font.bold: true
+                text: userName
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            Label {
+                text: realName
+                color: Theme.disabledTextColor
+                visible: realName !== userName && realName !== ""
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            Item { Layout.fillWidth: true }
+
+            Label {
+                text: qsTr("Currently logged")
+                visible: currentUser.userId === loggedUser.userId
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            RoundButton {
+                icon.width: 16
+                icon.height: 16
+                icon.source: Theme.darkMode ? (additionalSettings.shown ? "qrc:/images/dark/up.svg" : "qrc:/images/dark/down.svg")
+                                           : (additionalSettings.shown ? "qrc:/images/light/up.svg" : "qrc:/images/light/down.svg")
+                onClicked: additionalSettings.toggle()
+                Layout.alignment: Qt.AlignVCenter
             }
         }
 
         Hideable {
             id: additionalSettings
-            spacing: Theme.largeSpacing
+            Layout.fillWidth: true
+            shown: false
 
-            Item {
-                height: Theme.largeSpacing
-            }
-
-            GridLayout {
-                Layout.fillWidth: true
-                Layout.bottomMargin: Theme.smallSpacing
-                rowSpacing: Theme.largeSpacing * 2
-                columns: 2
-
-                Label {
-                    text: qsTr("Account type")
-                }
-
-                Label {
-                    text: currentUser.accountType === 0 ? qsTr("Standard")
-                                                        : qsTr("Administrator")
-                }
-
-                Label {
-                    text: qsTr("Automatic login")
-                    Layout.fillWidth: true
-                }
-
-                Switch {
-                    id: automaticLoginSwitch
-                    Layout.fillHeight: true
-                    leftPadding: 0
-                    rightPadding: 0
-                    onCheckedChanged: currentUser.automaticLogin = checked
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-
-                    Component.onCompleted: {
-                        automaticLoginSwitch.checked = currentUser.automaticLogin
-                    }
-                }
-            }
-
-            // Change password
-            HorizontalDivider {
-                visible: changePasswdLabel.visible
-            }
-
-            Label {
-                id: changePasswdLabel
-                visible: false
-                text: qsTr("Change password")
-            }
-
-            GridLayout {
-                id: changePasswdLayout
-                visible: false
-                columns: 2
-                columnSpacing: Theme.largeSpacing * 2
-                rowSpacing: Theme.smallSpacing * 2
-
-                Label {
-                    text: qsTr("Password")
-                    Layout.alignment: Qt.AlignRight
-                }
-
-                TextField {
-                    id: passwordField
-                    placeholderText: qsTr("Password")
-                    echoMode: TextField.Password
-                    Layout.fillWidth: true
-                    selectByMouse: true
-                }
-
-                Label {
-                    text: qsTr("Verify password")
-                    Layout.alignment: Qt.AlignRight
-                }
-
-                TextField {
-                    id: verifyPasswordField
-                    placeholderText: qsTr("Verify password")
-                    echoMode: TextField.Password
-                    Layout.fillWidth: true
-                    selectByMouse: true
-                }
-            }
-
-            RowLayout {
-                id: changePasswdFooterLayout
+            ColumnLayout {
+                width: parent.width
                 spacing: Theme.largeSpacing
-                visible: false
 
-                Button {
-                    text: qsTr("Cancel")
-                    onClicked: hideChangePasswordItem()
-                    Layout.fillWidth: true
-                }
+                Item { height: Theme.smallSpacing }
 
-                Button {
-                    text: qsTr("Change password")
-                    enabled: passwordField.text != "" &&
-                             passwordField.text == verifyPasswordField.text
+                GridLayout {
+                    columns: 2
                     Layout.fillWidth: true
-                    flat: true
-                    onClicked: {
-                        currentUser.setPassword(passwordField.text);
-                        hideChangePasswordItem()
+                    rowSpacing: Theme.mediumSpacing
+
+                    Label { text: qsTr("Account type") }
+                    Label { 
+                        text: currentUser.accountType === 0 ? qsTr("Standard") : qsTr("Administrator")
+                        Layout.alignment: Qt.AlignRight
+                    }
+
+                    Label { text: qsTr("Automatic login") }
+                    Switch {
+                        checked: currentUser.automaticLogin
+                        onCheckedChanged: currentUser.automaticLogin = checked
+                        Layout.alignment: Qt.AlignRight
                     }
                 }
-            }
 
-            HorizontalDivider {
-                visible: changePasswdLabel.visible
-            }
+                HorizontalDivider { visible: changePasswdLayout.visible }
 
-            // Change password end.
+                ColumnLayout {
+                    id: changePasswdLayout
+                    visible: false
+                    Layout.fillWidth: true
+                    spacing: Theme.smallSpacing
 
-            StandardButton {
-                text: qsTr("Change password")
-                onClicked: showChangePasswordItem()
-                backgroundColor: Theme.darkMode ? "#363636" : Theme.backgroundColor
-                Layout.fillWidth: true
-                visible: !changePasswdLabel.visible
-            }
+                    TextField {
+                        id: passwordField
+                        placeholderText: qsTr("New Password")
+                        echoMode: TextField.Password
+                        Layout.fillWidth: true
+                    }
 
-            StandardButton {
-                text: qsTr("Delete this user")
-                enabled: model.userId !== loggedUser.userId
-                onClicked: accountsManager.deleteUser(userId, true)
-                backgroundColor: Theme.darkMode ? "#363636" : Theme.backgroundColor
-                Layout.fillWidth: true
+                    TextField {
+                        id: verifyPasswordField
+                        placeholderText: qsTr("Verify Password")
+                        echoMode: TextField.Password
+                        Layout.fillWidth: true
+                    }
+
+                    RowLayout {
+                        Button {
+                            text: qsTr("Cancel")
+                            onClicked: control.hideChangePasswordItem()
+                            Layout.fillWidth: true
+                        }
+                        Button {
+                            text: qsTr("Apply")
+                            enabled: passwordField.text !== "" && passwordField.text === verifyPasswordField.text
+                            onClicked: {
+                                currentUser.setPassword(passwordField.text)
+                                control.hideChangePasswordItem()
+                            }
+                            Layout.fillWidth: true
+                        }
+                    }
+                }
+
+                StandardButton {
+                    text: qsTr("Change Password")
+                    visible: !changePasswdLayout.visible
+                    onClicked: changePasswdLayout.visible = true
+                    Layout.fillWidth: true
+                }
+
+                StandardButton {
+                    text: qsTr("Delete User")
+                    enabled: model.userId !== loggedUser.userId
+                    onClicked: accountsManager.deleteUser(model.userId, true)
+                    Layout.fillWidth: true
+                }
             }
         }
-    }
-
-    function showChangePasswordItem() {
-        changePasswdLabel.visible = true
-        changePasswdLayout.visible = true
-        changePasswdFooterLayout.visible = true
-
-        passwordField.forceActiveFocus()
     }
 
     function hideChangePasswordItem() {
         passwordField.clear()
         verifyPasswordField.clear()
-
-        changePasswdLabel.visible = false
         changePasswdLayout.visible = false
-        changePasswdFooterLayout.visible = false
     }
+}
