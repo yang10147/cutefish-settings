@@ -17,17 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import "../"
 
-import FishUI 1.0 as FishUI
 import Cutefish.NetworkManagement 1.0 as NM
 
 ColumnLayout {
     id: _contentLayout
-    spacing: FishUI.Units.largeSpacing
+    spacing: Theme.largeSpacing
 
     ConnectDialog {
         id: connectDialog
@@ -44,12 +43,12 @@ ColumnLayout {
     }
 
     RowLayout {
-        spacing: FishUI.Units.smallSpacing * 1.5
+        spacing: Theme.smallSpacing * 1.5
 
         Label {
             id: wlanLabel
             text: qsTr("WLAN")
-            color: FishUI.Theme.disabledTextColor
+            color: Theme.disabledTextColor
         }
 
         Item {
@@ -89,9 +88,6 @@ ColumnLayout {
             return totalHeight
         }
 
-        Component.onCompleted: {
-            wirelessView.contentY = 0
-        }
 
         clip: true
 

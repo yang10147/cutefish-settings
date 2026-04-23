@@ -17,12 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
-import QtGraphicalEffects 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
-import FishUI 1.0 as FishUI
 import Cutefish.Settings 1.0
 import Cutefish.Accounts 1.0
 import "../"
@@ -58,13 +56,13 @@ ItemPage {
         ColumnLayout {
             id: layout
             anchors.fill: parent
-            spacing: FishUI.Units.largeSpacing * 2
+            spacing: Theme.largeSpacing * 2
 
             ListView {
                 id: _userView
                 model: userModel
                 Layout.fillWidth: true
-                spacing: FishUI.Units.largeSpacing * 2
+                spacing: Theme.largeSpacing * 2
                 interactive: false
 
                 Layout.preferredHeight: {
@@ -95,7 +93,7 @@ ItemPage {
 
                 ColumnLayout {
                     id: _mainLayout
-                    spacing: FishUI.Units.largeSpacing * 1.5
+                    spacing: Theme.largeSpacing * 1.5
 
                     Label {
                         text: qsTr("Add new user")
@@ -103,8 +101,8 @@ ItemPage {
 
                     GridLayout {
                         columns: 2
-                        columnSpacing: FishUI.Units.largeSpacing * 2
-                        rowSpacing: FishUI.Units.smallSpacing * 2
+                        columnSpacing: Theme.largeSpacing * 2
+                        rowSpacing: Theme.smallSpacing * 2
 
                         Label {
                             text: qsTr("User name")
@@ -161,7 +159,7 @@ ItemPage {
 
                     RowLayout {
                         id: footerLayout
-                        spacing: FishUI.Units.largeSpacing
+                        spacing: Theme.largeSpacing
 
                         Button {
                             id: cancelButton
@@ -205,7 +203,7 @@ ItemPage {
             }
 
             Item {
-                height: FishUI.Units.largeSpacing
+                height: Theme.largeSpacing
             }
         }
     }

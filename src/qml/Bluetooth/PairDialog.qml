@@ -1,52 +1,22 @@
-import QtQuick 2.12
-import QtQuick.Window 2.12
-import QtQuick.Controls 2.4
-import QtQuick.Layouts 1.3
-import Cutefish.Settings 1.0
-import FishUI 1.0 as FishUI
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import "../"
 
-FishUI.Window {
+Dialog {
     id: control
-
-    width: contentWidth
-    height: contentHeight
-
-    property int contentWidth: mainLayout.implicitWidth + FishUI.Units.largeSpacing * 2 + control.header.height
-    property int contentHeight: mainLayout.implicitHeight + FishUI.Units.largeSpacing * 2 + control.header.height
-
-    minimumWidth: contentWidth
-    minimumHeight: contentHeight
-    maximumWidth: contentWidth
-    maximumHeight: contentHeight
-
-    modality: Qt.WindowModal
-    flags: Qt.Dialog | Qt.FramelessWindowHint
-    visible: false
-    title: " "
+    modal: true
+    x: parent ? (parent.width - width) / 2 : 0
+    y: parent ? (parent.height - height) / 2 : 0
+    title: qsTr("Bluetooth Pairing Request")
 
     property var pin: ""
 
-    background.color: FishUI.Theme.secondBackgroundColor
-    headerItem: Item {
-        Label {
-            anchors.fill: parent
-            anchors.leftMargin: FishUI.Units.largeSpacing
-            text: control.title
-        }
-    }
-
-    DragHandler {
-        target: null
-        acceptedDevices: PointerDevice.GenericPointer
-        grabPermissions: PointerHandler.CanTakeOverFromItems | PointerHandler.CanTakeOverFromHandlersOfDifferentType | PointerHandler.ApprovesTakeOverByAnything
-        onActiveChanged: if (active) { control.helper.startSystemMove(control) }
-    }
+    function show() { open() }
 
     ColumnLayout {
         id: mainLayout
-        anchors.fill: parent
-        anchors.margins: FishUI.Units.largeSpacing
+        spacing: Theme.largeSpacing
 
         Label {
             text: qsTr("Bluetooth Pairing Request")
@@ -57,19 +27,18 @@ FishUI.Window {
             text: "<b>%1</b>".arg(control.pin)
             visible: control.pin !== ""
             font.pointSize: 16
-
             Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: FishUI.Units.largeSpacing
+            Layout.bottomMargin: Theme.largeSpacing
         }
 
         RowLayout {
-            spacing: FishUI.Units.largeSpacing
+            spacing: Theme.largeSpacing
 
             Button {
                 text: qsTr("Cancel")
                 Layout.fillWidth: true
                 onClicked: {
-                    control.visible = false
+                    control.close()
                     bluetoothMgr.confirmMatchButton(false)
                 }
             }
@@ -79,7 +48,7 @@ FishUI.Window {
                 Layout.fillWidth: true
                 flat: true
                 onClicked: {
-                    control.visible = false
+                    control.close()
                     bluetoothMgr.confirmMatchButton(true)
                 }
             }

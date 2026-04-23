@@ -17,12 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.4
-import QtQuick.Controls 2.4
-import QtQuick.Layouts 1.3
-import QtGraphicalEffects 1.0
+import QtQuick
+import QtQuick.Effects
+import QtQuick.Controls
+import QtQuick.Layouts
 
-import FishUI 1.0 as FishUI
 import Cutefish.NetworkManagement 1.0 as NM
 
 Item {
@@ -30,10 +29,10 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: FishUI.Theme.smallRadius
-        color: mouseArea.containsMouse ? Qt.rgba(FishUI.Theme.textColor.r,
-                                                 FishUI.Theme.textColor.g,
-                                                 FishUI.Theme.textColor.b,
+        radius: Theme.smallRadius
+        color: mouseArea.containsMouse ? Qt.rgba(Theme.textColor.r,
+                                                 Theme.textColor.g,
+                                                 Theme.textColor.b,
                                                  0.1) : "transparent"
 
         Behavior on color {
@@ -59,14 +58,14 @@ Item {
 
     RowLayout {
         anchors.fill: parent
-        anchors.margins: FishUI.Units.smallSpacing
-        spacing: FishUI.Units.largeSpacing
+        anchors.margins: Theme.smallSpacing
+        spacing: Theme.largeSpacing
 
         Image {
             width: 22
             height: width
             sourceSize: Qt.size(width, height)
-            source: "qrc:/images/" + (FishUI.Theme.darkMode ? "dark/" : "light/") + "network-wired.svg"
+            source: "qrc:/images/" + (Theme.darkMode ? "dark/" : "light/") + "network-wired.svg"
         }
 
         Label {
@@ -82,11 +81,11 @@ Item {
             source: "qrc:/images/light/checked.svg"
             visible: model.connectionState === NM.NetworkModel.Activated
 
-            ColorOverlay {
+            MultiEffect {
                 anchors.fill: parent
                 source: parent
-                color: FishUI.Theme.highlightColor
-                opacity: 1
+                colorization: 1.0
+                colorizationColor: Theme.highlightColor
                 visible: true
             }
         }

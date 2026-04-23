@@ -17,12 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.4
-import QtQuick.Controls 2.4
-import QtQuick.Layouts 1.3
-import QtGraphicalEffects 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
-import FishUI 1.0 as FishUI
 import Cutefish.NetworkManagement 1.0 as NM
 
 import "../"
@@ -66,8 +64,12 @@ ItemPage {
         }
     }
 
-    Component.onCompleted: {
-        handler.requestScan()
+    Timer {
+        interval: 10200
+        repeat: true
+        running: control.visible
+        triggeredOnStart: true
+        onTriggered: handler.requestScan()
     }
 
     Timer {
@@ -86,8 +88,8 @@ ItemPage {
         ColumnLayout {
             id: mainLayout
             anchors.fill: parent
-            anchors.bottomMargin: FishUI.Units.largeSpacing
-            spacing: FishUI.Units.largeSpacing * 2
+            anchors.bottomMargin: Theme.largeSpacing
+            spacing: Theme.largeSpacing * 2
 
             RoundedItem {
                 WifiView {
@@ -111,7 +113,7 @@ ItemPage {
 //                RowLayout {
 //                    Label {
 //                        text: qsTr("Hotspot")
-//                        color: FishUI.Theme.disabledTextColor
+//                        color: Theme.disabledTextColor
 //                    }
 
 //                    Item {
@@ -133,7 +135,7 @@ ItemPage {
 //                }
 
 //                Item {
-//                    height: FishUI.Units.largeSpacing
+//                    height: Theme.largeSpacing
 //                }
 
 //                TextField {
@@ -150,7 +152,7 @@ ItemPage {
 //            }
 
             Item {
-                height: FishUI.Units.largeSpacing
+                height: Theme.largeSpacing
             }
         }
     }

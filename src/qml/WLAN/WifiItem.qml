@@ -17,20 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.4
-import QtQuick.Controls 2.4
-import QtQuick.Layouts 1.3
-import QtGraphicalEffects 1.0
+import QtQuick
+import QtQuick.Effects
+import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Window 2.3
 
-import FishUI 1.0 as FishUI
 import Cutefish.NetworkManagement 1.0 as NM
 import "../"
 
 Item {
     id: control
 
-    height: _itemLayout.implicitHeight + FishUI.Units.largeSpacing
+    height: _itemLayout.implicitHeight + Theme.largeSpacing
 
     property bool passwordIsStatic: (model.securityType === NM.Enums.StaticWep || model.securityType === NM.Enums.WpaPsk ||
                                      model.securityType === NM.Enums.Wpa2Psk || model.securityType === NM.Enums.SAE)
@@ -41,19 +40,19 @@ Item {
         anchors.fill: parent
         anchors.leftMargin: 0
         anchors.rightMargin: 0
-        anchors.topMargin: FishUI.Units.smallSpacing
-        anchors.bottomMargin: FishUI.Units.smallSpacing
+        anchors.topMargin: Theme.smallSpacing
+        anchors.bottomMargin: Theme.smallSpacing
         spacing: 0
 
         // 顶部项
         Item {
             Layout.fillWidth: true
-            Layout.preferredHeight: _topItem.implicitHeight + FishUI.Units.largeSpacing
+            Layout.preferredHeight: _topItem.implicitHeight + Theme.largeSpacing
 
             Rectangle {
                 anchors.fill: parent
-                radius: FishUI.Theme.smallRadius
-                color: FishUI.Theme.textColor
+                radius: Theme.smallRadius
+                color: Theme.textColor
                 opacity: mouseArea.pressed ? 0.15 :  mouseArea.containsMouse ? 0.1 : 0.0
             }
 
@@ -108,15 +107,15 @@ Item {
             RowLayout {
                 id: _topItem
                 anchors.fill: parent
-                anchors.leftMargin: FishUI.Units.smallSpacing
-                anchors.rightMargin: FishUI.Units.smallSpacing
-                spacing: FishUI.Units.largeSpacing
+                anchors.leftMargin: Theme.smallSpacing
+                anchors.rightMargin: Theme.smallSpacing
+                spacing: Theme.largeSpacing
 
                 Image {
                     width: 22
                     height: width
                     sourceSize: Qt.size(width, height)
-                    source: "qrc:/images/" + (FishUI.Theme.darkMode ? "dark/" : "light/") + model.connectionIcon + ".svg"
+                    source: "qrc:/images/" + (Theme.darkMode ? "dark/" : "light/") + model.connectionIcon + ".svg"
                     smooth: false
                 }
 
@@ -128,7 +127,7 @@ Item {
                     Layout.fillWidth: true
                 }
 
-                FishUI.BusyIndicator {
+                BusyIndicator {
                     id: busyIndicator
                     width: 22
                     height: width
@@ -145,11 +144,11 @@ Item {
                     source: "qrc:/images/light/checked.svg"
                     visible: model.connectionState === NM.Enums.Activated
 
-                    ColorOverlay {
+                    MultiEffect {
                         anchors.fill: parent
                         source: parent
-                        color: FishUI.Theme.highlightColor
-                        opacity: 1
+                        colorization: 1.0
+                        colorizationColor: Theme.highlightColor
                         visible: true
                     }
                 }
@@ -159,7 +158,7 @@ Item {
                     width: 22
                     height: width
                     sourceSize: Qt.size(width, height)
-                    source: FishUI.Theme.darkMode ? "qrc:/images/dark/locked.svg" : "qrc:/images/light/locked.svg"
+                    source: Theme.darkMode ? "qrc:/images/dark/locked.svg" : "qrc:/images/light/locked.svg"
                     visible: (model.securityType === -1 | model.securityType === 0) ? false : true
                     smooth: false
                 }
@@ -192,13 +191,13 @@ Item {
             }
 
             Item {
-                height: FishUI.Units.largeSpacing * 2
+                height: Theme.largeSpacing * 2
             }
 
             // 密码对话
             RowLayout {
                 visible: predictableWirelessPassword
-                spacing: FishUI.Units.largeSpacing
+                spacing: Theme.largeSpacing
 
                 Label {
                     text: qsTr("Password")
@@ -210,8 +209,8 @@ Item {
                     echoMode: TextInput.Password
                     selectByMouse: true
                     placeholderText: qsTr("Password")
-                    validator: RegExpValidator {
-                        regExp: {
+                    validator: RegularExpressionValidator {
+                        regularExpression: {
                             if (model.securityType === NM.Enums.StaticWep)
                                 return /^(?:[\x20-\x7F]{5}|[0-9a-fA-F]{10}|[\x20-\x7F]{13}|[0-9a-fA-F]{26}){1}$/;
                             return /^(?:[\x20-\x7F]{8,64}){1}$/;
@@ -263,7 +262,7 @@ Item {
             }
 
             Item {
-                height: FishUI.Units.smallSpacing
+                height: Theme.smallSpacing
             }
 
             HorizontalDivider {}

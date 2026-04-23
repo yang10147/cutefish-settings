@@ -17,12 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.4
-import QtQuick.Controls 2.4
-import QtQuick.Layouts 1.3
-import QtGraphicalEffects 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
-import FishUI 1.0 as FishUI
 import Cutefish.NetworkManagement 1.0 as NM
 
 import "../"
@@ -65,20 +63,20 @@ ItemPage {
         ColumnLayout {
             id: mainLayout
             anchors.fill: parent
-            anchors.bottomMargin: FishUI.Units.largeSpacing
-            spacing: FishUI.Units.largeSpacing * 2
+            anchors.bottomMargin: Theme.largeSpacing
+            spacing: Theme.largeSpacing * 2
 
             // Wired connection
             RoundedItem {
                 visible: enabledConnections.wwanHwEnabled
-                spacing: FishUI.Units.largeSpacing
+                spacing: Theme.largeSpacing
 
                 RowLayout {
-                    spacing: FishUI.Units.largeSpacing
+                    spacing: Theme.largeSpacing
 
                     Label {
                         text: qsTr("Ethernet")
-                        color: FishUI.Theme.disabledTextColor
+                        color: Theme.disabledTextColor
                         Layout.fillWidth: true
                     }
 
@@ -125,7 +123,7 @@ ItemPage {
             }
 
             Item {
-                height: FishUI.Units.largeSpacing
+                height: Theme.largeSpacing
             }
         }
     }

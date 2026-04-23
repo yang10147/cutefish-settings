@@ -17,10 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
-import FishUI 1.0 as FishUI
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Cutefish.Settings 1.0
 import "../"
 
@@ -47,12 +46,12 @@ ItemPage {
 
             RoundedItem {
                 id: mainItem
-                spacing: FishUI.Units.largeSpacing
+                spacing: Theme.largeSpacing
 
                 RowLayout {
                     Label {
                         text: qsTr("VPN")
-                        color: FishUI.Theme.disabledTextColor
+                        color: Theme.disabledTextColor
                     }
 
                     Item {
@@ -69,7 +68,7 @@ ItemPage {
             }
 
             Item {
-                height: FishUI.Units.smallSpacing
+                height: Theme.smallSpacing
             }
         }
     }

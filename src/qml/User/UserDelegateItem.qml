@@ -17,22 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
-import QtQuick.Dialogs 1.2
-import QtGraphicalEffects 1.0
+import QtQuick
+import QtQuick.Effects
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Dialogs
 
 import Cutefish.Settings 1.0
 import Cutefish.Accounts 1.0
-import FishUI 1.0 as FishUI
 
 import "../"
 
 RoundedItem {
     id: control
 
-    height: mainLayout.implicitHeight + FishUI.Units.largeSpacing * 2
+    height: mainLayout.implicitHeight + Theme.largeSpacing * 2
 
     UserAccount {
         id: currentUser
@@ -41,11 +40,10 @@ RoundedItem {
 
     FileDialog {
         id: fileDialog
-        folder: shortcuts.pictures
         nameFilters: ["Image files (*.jpg *.png)", "All files (*)"]
         onAccepted: {
-            currentUser.iconFileName = fileDialog.fileUrl.toString().replace("file://", "")
-            _userImage.source = fileDialog.fileUrl
+            currentUser.iconFileName = fileDialog.selectedFile.toString().replace("file://", "")
+            _userImage.source = fileDialog.selectedFile
             _userImage.update()
         }
     }
@@ -62,7 +60,7 @@ RoundedItem {
                 id: _topItem
 
                 Layout.fillWidth: true
-                height: _topLayout.implicitHeight + FishUI.Units.largeSpacing
+                height: _topLayout.implicitHeight + Theme.largeSpacing
 
                 MouseArea {
                     anchors.fill: parent
@@ -72,8 +70,8 @@ RoundedItem {
                 RowLayout {
                     id: _topLayout
                     anchors.fill: parent
-                    anchors.topMargin: FishUI.Units.smallSpacing
-                    anchors.bottomMargin: FishUI.Units.smallSpacing
+                    anchors.topMargin: Theme.smallSpacing
+                    anchors.bottomMargin: Theme.smallSpacing
                     spacing: 0
 
                     Image {
@@ -95,16 +93,18 @@ RoundedItem {
                         }
 
                         layer.enabled: true
-                        layer.effect: OpacityMask {
-                            maskSource: Item {
-                                width: _userImage.width
-                                height: width
-
-                                Rectangle {
-                                    anchors.fill: parent
+                        layer.effect: MultiEffect {
+                            maskEnabled: true
+                            maskThresholdMin: 0.5
+                            maskSpreadAtMin: 1.0
+                            maskSource: ShaderEffectSource {
+                                sourceItem: Rectangle {
+                                    width: _userImage.width
+                                    height: width
                                     radius: width / 2
                                 }
                             }
+                        }
                         }
                     }
 
@@ -112,17 +112,17 @@ RoundedItem {
                         Layout.alignment: Qt.AlignVCenter
                         font.pixelSize: 15
                         text: "<b>%1</b>".arg(userName)
-                        leftPadding: FishUI.Units.largeSpacing
+                        leftPadding: Theme.largeSpacing
                     }
 
                     Item {
-                        width: FishUI.Units.largeSpacing
+                        width: Theme.largeSpacing
                     }
 
                     Label {
                         Layout.alignment: Qt.AlignVCenter
                         text: realName
-                        color: FishUI.Theme.disabledTextColor
+                        color: Theme.disabledTextColor
                         visible: realName !== userName
                     }
 
@@ -137,12 +137,12 @@ RoundedItem {
                     }
 
                     Item {
-                        width: FishUI.Units.smallSpacing
+                        width: Theme.smallSpacing
                     }
 
-                    FishUI.RoundImageButton {
-                        iconMargins: FishUI.Units.smallSpacing
-                        source: FishUI.Theme.darkMode ? additionalSettings.shown ? "qrc:/images/dark/up.svg" : "qrc:/images/dark/down.svg"
+                    RoundButton {
+                        iconMargins: Theme.smallSpacing
+                        source: Theme.darkMode ? additionalSettings.shown ? "qrc:/images/dark/up.svg" : "qrc:/images/dark/down.svg"
                                                       : additionalSettings.shown ? "qrc:/images/light/up.svg" : "qrc:/images/light/down.svg"
                         onClicked: additionalSettings.toggle()
                         Layout.alignment: Qt.AlignVCenter
@@ -153,16 +153,16 @@ RoundedItem {
 
         Hideable {
             id: additionalSettings
-            spacing: FishUI.Units.largeSpacing
+            spacing: Theme.largeSpacing
 
             Item {
-                height: FishUI.Units.largeSpacing
+                height: Theme.largeSpacing
             }
 
             GridLayout {
                 Layout.fillWidth: true
-                Layout.bottomMargin: FishUI.Units.smallSpacing
-                rowSpacing: FishUI.Units.largeSpacing * 2
+                Layout.bottomMargin: Theme.smallSpacing
+                rowSpacing: Theme.largeSpacing * 2
                 columns: 2
 
                 Label {
@@ -208,8 +208,8 @@ RoundedItem {
                 id: changePasswdLayout
                 visible: false
                 columns: 2
-                columnSpacing: FishUI.Units.largeSpacing * 2
-                rowSpacing: FishUI.Units.smallSpacing * 2
+                columnSpacing: Theme.largeSpacing * 2
+                rowSpacing: Theme.smallSpacing * 2
 
                 Label {
                     text: qsTr("Password")
@@ -240,7 +240,7 @@ RoundedItem {
 
             RowLayout {
                 id: changePasswdFooterLayout
-                spacing: FishUI.Units.largeSpacing
+                spacing: Theme.largeSpacing
                 visible: false
 
                 Button {
@@ -256,7 +256,7 @@ RoundedItem {
                     Layout.fillWidth: true
                     flat: true
                     onClicked: {
-                        currentUser.setPassword(Password.cryptPassword(passwordField.text));
+                        currentUser.setPassword(passwordField.text);
                         hideChangePasswordItem()
                     }
                 }
@@ -271,7 +271,7 @@ RoundedItem {
             StandardButton {
                 text: qsTr("Change password")
                 onClicked: showChangePasswordItem()
-                backgroundColor: FishUI.Theme.darkMode ? "#363636" : FishUI.Theme.backgroundColor
+                backgroundColor: Theme.darkMode ? "#363636" : Theme.backgroundColor
                 Layout.fillWidth: true
                 visible: !changePasswdLabel.visible
             }
@@ -280,7 +280,7 @@ RoundedItem {
                 text: qsTr("Delete this user")
                 enabled: model.userId !== loggedUser.userId
                 onClicked: accountsManager.deleteUser(userId, true)
-                backgroundColor: FishUI.Theme.darkMode ? "#363636" : FishUI.Theme.backgroundColor
+                backgroundColor: Theme.darkMode ? "#363636" : Theme.backgroundColor
                 Layout.fillWidth: true
             }
         }
@@ -302,4 +302,3 @@ RoundedItem {
         changePasswdLayout.visible = false
         changePasswdFooterLayout.visible = false
     }
-}

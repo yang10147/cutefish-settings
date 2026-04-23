@@ -17,11 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.4
+import QtQuick
 import QtQuick.Window 2.3
-import QtQuick.Controls 2.4
-import QtQuick.Layouts 1.3
-import FishUI 1.0 as FishUI
+import QtQuick.Controls
+import QtQuick.Layouts
 import Cutefish.NetworkManagement 1.0 as NM
 
 Dialog {
@@ -32,7 +31,7 @@ Dialog {
 
     x: (parent.width - width) / 2
     y: (parent.height - height) / 2
-    height: detailsLayout.childrenRect.height + footerLayout.childrenRect.height + FishUI.Units.largeSpacing * 1.5
+    height: detailsLayout.childrenRect.height + footerLayout.childrenRect.height + Theme.largeSpacing * 1.5
     modal: true
 
     signal forgetBtnClicked()
@@ -52,20 +51,20 @@ Dialog {
 
     ColumnLayout {
         id: detailsLayout
-        spacing: FishUI.Units.largeSpacing * 1.5
+        spacing: Theme.largeSpacing * 1.5
 
         GridLayout {
             id: gridLayout
             columns: 2
-            columnSpacing: FishUI.Units.largeSpacing
-            rowSpacing: FishUI.Units.smallSpacing
+            columnSpacing: Theme.largeSpacing
+            rowSpacing: Theme.smallSpacing
 
             Label {
                 id: autoJoinLabel
                 text: qsTr("Auto-Join")
                 visible: false
                 Layout.alignment: Qt.AlignRight
-                color: FishUI.Theme.disabledTextColor
+                color: Theme.disabledTextColor
             }
 
             Switch {
@@ -79,7 +78,7 @@ Dialog {
 
             Label {
                 text: qsTr("Security")
-                color: FishUI.Theme.disabledTextColor
+                color: Theme.disabledTextColor
                 Layout.alignment: Qt.AlignRight
             }
 
@@ -91,7 +90,7 @@ Dialog {
 
             Label {
                 text: qsTr("Signal")
-                color: FishUI.Theme.disabledTextColor
+                color: Theme.disabledTextColor
                 Layout.alignment: Qt.AlignRight
             }
 
@@ -103,7 +102,7 @@ Dialog {
 
             Label {
                 text: qsTr("IPv4 Address")
-                color: FishUI.Theme.disabledTextColor
+                color: Theme.disabledTextColor
                 Layout.alignment: Qt.AlignRight
             }
 
@@ -117,7 +116,7 @@ Dialog {
             Label {
                 font.bold: true
                 text: qsTr("IPv6 Address")
-                color: FishUI.Theme.disabledTextColor
+                color: Theme.disabledTextColor
                 Layout.alignment: Qt.AlignRight
             }
 
@@ -131,7 +130,7 @@ Dialog {
             Label {
                 font.bold: true
                 text: qsTr("MAC Address")
-                color: FishUI.Theme.disabledTextColor
+                color: Theme.disabledTextColor
                 Layout.alignment: Qt.AlignRight
             }
 
@@ -145,7 +144,7 @@ Dialog {
             Label {
                 font.bold: true
                 text: qsTr("Gateway")
-                color: FishUI.Theme.disabledTextColor
+                color: Theme.disabledTextColor
                 Layout.alignment: Qt.AlignRight
             }
 
@@ -158,7 +157,7 @@ Dialog {
             Label {
                 font.bold: true
                 text: qsTr("DNS")
-                color: FishUI.Theme.disabledTextColor
+                color: Theme.disabledTextColor
                 Layout.alignment: Qt.AlignRight
             }
 
@@ -171,7 +170,7 @@ Dialog {
 
         RowLayout {
             id: footerLayout
-            spacing: FishUI.Units.largeSpacing
+            spacing: Theme.largeSpacing
 
             Button {
                 text: qsTr("Close")

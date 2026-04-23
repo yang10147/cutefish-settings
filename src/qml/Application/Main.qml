@@ -17,12 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.4
-import QtQuick.Controls 2.4
-import QtQuick.Layouts 1.3
-import QtGraphicalEffects 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
-import FishUI 1.0 as FishUI
 import "../"
 
 ItemPage {
@@ -36,17 +34,17 @@ ItemPage {
         ColumnLayout {
             id: layout
             anchors.fill: parent
-            spacing: FishUI.Units.smallSpacing
+            spacing: Theme.smallSpacing
 
             Label {
                 text: qsTr("Default application")
-                leftPadding: FishUI.Units.largeSpacing
+                leftPadding: Theme.largeSpacing
             }
 
             RoundedItem {
                 GridLayout {
                     columns: 2
-                    columnSpacing: FishUI.Units.largeSpacing * 2
+                    columnSpacing: Theme.largeSpacing * 2
 
                     Label {
                         text: qsTr("Web browser")
